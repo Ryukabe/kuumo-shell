@@ -6,5 +6,7 @@ Singleton {
     property string mode: "idle"
     readonly property bool extended: mode === "extended"
 
-    function toggleExtended() { mode = extended ? "idle" : "extended" }
+    function expand() { mode = "extended" }
+    function collapse() { mode = "idle" }
+    function toggleExtended() { extended ? collapse() : expand() }
 }

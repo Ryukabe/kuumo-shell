@@ -6,8 +6,8 @@ Rectangle {
     property real maxRadius: 28
 
     radius: Math.min(height / 2, maxRadius)
-    color: Theme.subBg
-    border.width: 1
+    color: Theme.bg
+    border.width: 0
     border.color: Theme.border
     clip: true
 }

@@ -1,5 +1,6 @@
 pragma Singleton
 import Quickshell
+import QtQuick
 
 Singleton {
     property bool doNotDisturb: false

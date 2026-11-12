@@ -1,19 +1,15 @@
-pragma Singleton
-
 import Quickshell
-import "../modules/island"
+import Quickshell.Io
+import "../state"
 
-// Named IpcRouter because Quickshell already exports IpcHandler.
+// All outside-world triggers (keybinds, CLI) land here.
+// Usage: qs -p ~/Projects/kuumo-shell ipc call island toggle
 Scope {
     IpcHandler {
-        target: "kuumo"
+        target: "island"
 
-        function ping(): string {
-            return "kuumo"
-        }
-
-        function toggleIsland(): void {
-            IslandService.toggle()
-        }
+        function toggle(): void { IslandState.toggleExtended() }
+        function expand(): void { IslandState.expand() }
+        function collapse(): void { IslandState.collapse() }
     }
 }

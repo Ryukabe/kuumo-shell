@@ -8,36 +8,24 @@ Item {
 
     property alias pill: pill
 
-    // Per-mode layout: island size, clock size, and clock position.
-    // Sizes come from your reference screenshots; tune freely.
+    // The clock is drawn once at its largest size and scaled down, so text
+    // never re-rasterizes (and never steps in whole pixels) during a morph.
+    readonly property int fullClockSize: 30
+
     readonly property var layouts: ({
-        idle:     { w: 123, h: 26,  clockSize: 12 },
-        extended: { w: 435, h: 100, clockSize: 24, padX: 22, padY: 16 }
+        idle:     { w: 123, h: 32,  clockSize: 15 },
+        extended: { w: 435, h: 100, clockSize: 30, padX: 22, padY: 16 }
     })
     readonly property var cur: layouts[IslandState.mode] ?? layouts.idle
 
-    // Measure the clock at each size so it can be centered or left-aligned exactly
-    TextMetrics {
-        id: mIdle
-        text: SystemState.timeText
-        font.family: Theme.fontDisplay
-        font.weight: Font.DemiBold
-        font.pixelSize: root.layouts.idle.clockSize
-    }
-    TextMetrics {
-        id: mExt
-        text: SystemState.timeText
-        font.family: Theme.fontDisplay
-        font.weight: Font.DemiBold
-        font.pixelSize: root.layouts.extended.clockSize
-    }
+    readonly property real idleScale: layouts.idle.clockSize / fullClockSize
 
     readonly property real clockX: IslandState.extended
         ? layouts.extended.padX
-        : (layouts.idle.w - mIdle.width) / 2
+        : (layouts.idle.w - clock.implicitWidth * idleScale) / 2
     readonly property real clockY: IslandState.extended
         ? layouts.extended.padY
-        : (layouts.idle.h - mIdle.height) / 2
+        : (layouts.idle.h - clock.implicitHeight * idleScale) / 2
 
     // One spring preset for everything that morphs, so the clock stays attached to the island
     component Follow: Spring {
@@ -52,28 +40,34 @@ Item {
     Follow { id: sy; target: root.clockY }
     Follow { id: ss; target: root.cur.clockSize }
 
+    // Start at rest, not mid-spring, once all targets are known
+    Component.onCompleted: {
+        sw.snap(); sh.snap(); sx.snap(); sy.snap(); ss.snap()
+    }
+
     IslandPill {
         id: pill
-        anchors.horizontalCenter: parent.horizontalCenter
+        x: Math.round((root.width - width) / 2)
         y: 0
-        width: Math.max(sw.value, 20)
-        height: Math.max(sh.value, 12)
+        width: Math.max(Math.round(sw.value), 20)
+        height: Math.max(Math.round(sh.value), 12)
 
-        // The one shared clock: it moves and scales, it is never swapped
-        Text {
-            id: clockText
+        NumberFlow {
+            id: clock
             x: sx.value
             y: sy.value
             text: SystemState.timeText
-            color: Theme.fg
-            font.family: Theme.fontDisplay
-            font.weight: Font.DemiBold
-            font.pixelSize: Math.max(ss.value, 1)
+            // Hour tens 0-2, minute tens 0-5, everything else 0-9 (index 2 is the colon)
+            rings: [3, 10, 10, 6, 10]
+            pixelSize: root.fullClockSize
+            animated: !ShellState.motionReduced
+            transformOrigin: Item.TopLeft
+            scale: ss.value / root.fullClockSize
         }
 
         Text {
             x: sx.value
-            y: sy.value + clockText.height + 2
+            y: sy.value + clock.implicitHeight * clock.scale + 2
             text: SystemState.dateText
             color: Theme.fgMuted
             font.family: Theme.fontText
