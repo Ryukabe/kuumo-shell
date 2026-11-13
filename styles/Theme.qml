@@ -12,7 +12,7 @@ Singleton {
     readonly property var presetMap: ({ "kuumo-dark": _kuumoDark })
 
     // ── Single source of truth: the active preset ──
-    readonly property QtObject active: presetMap[Root.Config.theme] ?? _kuumoDark
+    readonly property var active: presetMap[Root.Config.theme] ?? _kuumoDark
 
     // ── Colors ──
     readonly property bool darkMode: active.darkMode

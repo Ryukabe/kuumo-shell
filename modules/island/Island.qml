@@ -8,18 +8,25 @@ Item {
 
     property alias pill: pill
 
+    // Gap between the screen edge and the island, and the space the island reserves
+    // for windows. Based on the idle size only, so it never changes during a morph.
+    readonly property int topGap: 8
+    readonly property int reservedHeight: topGap + layouts.idle.h
+
     // The clock is drawn once at its largest size and scaled down, so text
     // never re-rasterizes (and never steps in whole pixels) during a morph.
-    readonly property int fullClockSize: 30
+    readonly property int fullClockSize: 24
 
+    // Widths are even so the settled island sits on whole pixels.
     readonly property var layouts: ({
-        idle:     { w: 123, h: 32,  clockSize: 15 },
-        extended: { w: 435, h: 100, clockSize: 30, padX: 22, padY: 16 }
+        idle:     { w: 124, h: 32,  clockSize: 12 },
+        extended: { w: 436, h: 100, clockSize: 24, padX: 22, padY: 16 }
     })
     readonly property var cur: layouts[IslandState.mode] ?? layouts.idle
 
     readonly property real idleScale: layouts.idle.clockSize / fullClockSize
 
+    // Where the clock sits inside the pill
     readonly property real clockX: IslandState.extended
         ? layouts.extended.padX
         : (layouts.idle.w - clock.implicitWidth * idleScale) / 2
@@ -27,7 +34,8 @@ Item {
         ? layouts.extended.padY
         : (layouts.idle.h - clock.implicitHeight * idleScale) / 2
 
-    // One spring preset for everything that morphs, so the clock stays attached to the island
+    // One spring preset for everything that morphs, so the island and the clock
+    // start and finish together
     component Follow: Spring {
         response: Motion.morph.response
         dampingFraction: Motion.morph.damping
@@ -47,13 +55,18 @@ Item {
 
     IslandPill {
         id: pill
-        x: Math.round((root.width - width) / 2)
-        y: 0
-        width: Math.max(Math.round(sw.value), 20)
-        height: Math.max(Math.round(sh.value), 12)
 
+        // No rounding: the spring moves in fractions of a pixel and the GPU draws
+        // that smoothly. Rounding made the settle step in whole pixels.
+        width: Math.max(sw.value, 20)
+        height: Math.max(sh.value, 12)
+        x: (root.width - width) / 2
+        y: root.topGap
+
+        // The one shared clock: it moves and scales, it is never swapped
         NumberFlow {
             id: clock
+            weight: Font.Bold
             x: sx.value
             y: sy.value
             text: SystemState.timeText
@@ -63,6 +76,8 @@ Item {
             animated: !ShellState.motionReduced
             transformOrigin: Item.TopLeft
             scale: ss.value / root.fullClockSize
+            layer.enabled: true
+            layer.smooth: true
         }
 
         Text {

@@ -11,13 +11,16 @@ ShellRoot {
     PanelWindow {
         id: win
         anchors.top: true
-        margins.top: 8
 
         // Static surface: never animate this. Only the island inside morphs.
         implicitWidth: 600
         implicitHeight: 140
-        exclusionMode: ExclusionMode.Normal
         color: "transparent"
+
+        // Windows stay out from under the island. The zone is the idle size plus the
+        // gap, so it stays fixed while the island morphs.
+        exclusionMode: ExclusionMode.Normal
+        exclusiveZone: island.reservedHeight
 
         // Only the island itself takes input; the rest of the window is click-through
         mask: Region { item: island.pill }
