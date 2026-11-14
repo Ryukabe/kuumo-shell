@@ -31,6 +31,20 @@ Singleton {
     readonly property color purple: active.purple
     readonly property color cyan: active.cyan
 
+    // ── Opacities ──
+    // Content shown but inactive (e.g. the player with nothing playing)
+    readonly property real dimOpacity: 0.4
+    // Darkening behind an icon drawn over an image
+    readonly property real scrimOpacity: 0.55
+
+    // ── Glow (moonlight) ──
+    readonly property real glowRest: 0.55        // divider glow strength at rest
+    readonly property real glowBreathe: 0.25     // extra strength at the top of a breath
+    readonly property real glowSurge: 0.45       // extra strength at the peak of a surge
+    readonly property real glowShoulder: 0.3     // strength on the shoulders of the divider
+    readonly property real glowShoulderAt: 0.22  // where the shoulders sit along it (0..0.5)
+    readonly property real haloOpacity: 0.3      // strength of the halo around the island
+
     // ── Fonts ──
     readonly property string fontDisplay: "SF Pro Display"
     readonly property string fontText: "SF Pro Text"
@@ -48,6 +62,7 @@ Singleton {
     readonly property int spacingLg: 16
 
     // ── Font sizes ──
+    readonly property int fontSizeXs: 11
     readonly property int fontSizeSm: 12
     readonly property int fontSizeMd: 14
     readonly property int fontSizeLg: 18
