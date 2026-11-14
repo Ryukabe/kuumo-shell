@@ -16,8 +16,10 @@ Item {
     property real dampingFraction: 0.8   // 1 = no bounce; lower = more bounce
     property bool animated: true
 
-    property real restDelta: 0.05        // settle thresholds
-    property real restSpeed: 0.5
+    // Settle thresholds, in value units. Small enough for springs that move between
+    // 0 and 1: a larger threshold made those snap to their target instead of gliding.
+    property real restDelta: 0.001
+    property real restSpeed: 0.01
 
     readonly property bool running: frames.running
 
@@ -30,6 +32,12 @@ Item {
         value = target
         velocity = 0
         frames.running = false
+    }
+
+    // Give the spring a push (value units per second), e.g. to bounce it off an end
+    function kick(v) {
+        velocity += v
+        if (animated) frames.running = true
     }
 
     Component.onCompleted: value = target

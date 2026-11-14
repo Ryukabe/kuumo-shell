@@ -5,6 +5,7 @@ import "../../components"
 import "../../styles"
 import "../../state"
 import "../media"
+import "../osd"
 import "../workspaces"
 
 Item {
@@ -40,20 +41,30 @@ Item {
             dotsGap: 8, dotSize: 6, dotActiveW: 16, dotGap: 6, dotHit: 4
         },
         // clockCenterY: how far below the top edge the small clock's middle sits
-        control: { w: 312, h: 380, clockSize: 12, padX: 16, clockCenterY: 16 }
+        control: { w: 312, h: 380, clockSize: 12, padX: 16, clockCenterY: 16 },
+        // Volume / brightness: icon on the left, bar with a moon at the end of its fill
+        osd: {
+            w: 240, h: 44, clockSize: 12, padX: 16,
+            iconSize: 20, iconGap: 12, barH: 4, dotSize: 8, glowReach: 14
+        }
     })
-    readonly property var cur: layouts[IslandState.mode] ?? layouts.idle
+    readonly property var cur: IslandState.osdActive
+        ? layouts.osd
+        : (layouts[IslandState.mode] ?? layouts.idle)
 
     readonly property real idleScale: layouts.idle.clockSize / fullClockSize
     readonly property real extClockScale: layouts.extended.clockSize / fullClockSize
     readonly property real ctlClockScale: layouts.control.clockSize / fullClockSize
+
+    function clamp01(v) { return Math.max(0, Math.min(1, v)) }
 
     // Height of the clock + date block when extended, used to center it vertically
     readonly property real clockBlockH:
         clock.implicitHeight * extClockScale
         + layouts.extended.dateGap + dateText.implicitHeight
 
-    // Where the clock sits inside the pill, per mode
+    // Where the clock sits inside the pill, per mode. During the OSD it stays where
+    // its mode put it and simply fades out.
     readonly property real clockX: IslandState.extended
         ? layouts.extended.padX
         : IslandState.control
@@ -104,28 +115,48 @@ Item {
 
     // How far the pill has grown from idle to extended (0..1), read from the width
     // spring so everything that fades in stays in step with the morph
-    readonly property real growth: Math.max(0, Math.min(1,
-        (sw.value - layouts.idle.w) / (layouts.extended.w - layouts.idle.w)))
+    readonly property real growth: clamp01(
+        (sw.value - layouts.idle.w) / (layouts.extended.w - layouts.idle.w))
 
     // The extended content appears over the later part of the growth
-    readonly property real revealed: Math.max(0, Math.min(1,
-        (growth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart)))
+    readonly property real revealed: clamp01(
+        (growth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
 
-    // Leaving extended (collapse or control center) hides it fast
-    property real shown: IslandState.extended ? 1 : 0
+    // Leaving extended (collapse, control center or an OSD) hides it fast
+    property real shown: IslandState.extended && !IslandState.osdActive ? 1 : 0
     Behavior on shown {
         NumberAnimation {
-            duration: IslandState.extended ? 0 : Motion.fadeOut
+            duration: shown > 0 || IslandState.osdActive || !IslandState.extended ? Motion.fadeOut : 0
             easing.type: Easing.OutCubic
         }
     }
 
     readonly property real reveal: revealed * shown
 
+    // The OSD content appears the same way, measured against the OSD's own size
+    readonly property real osdGrowth: clamp01(
+        (sw.value - layouts.idle.w) / (layouts.osd.w - layouts.idle.w))
+    readonly property real osdRevealed: clamp01(
+        (osdGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
+    property real osdShown: IslandState.osdActive ? 1 : 0
+    Behavior on osdShown {
+        NumberAnimation {
+            duration: IslandState.osdActive ? 0 : Motion.fadeOut
+            easing.type: Easing.OutCubic
+        }
+    }
+    readonly property real osdReveal: osdRevealed * osdShown
+
     // ── Moonlight halo ──
     // The pill clips its children, so the halo sits behind it as a sibling. The
     // source has the pill's own color and shape and is hidden by the pill itself;
-    // only its blurred light shadow shows around the edge.
+    // only its blurred light shadow shows around the edge. During the OSD it
+    // brightens with the level.
+    property real haloBoost: IslandState.osdActive ? Theme.haloOsdBoost * OsdService.haloLevel : 0
+    Behavior on haloBoost {
+        NumberAnimation { duration: Motion.fadeIn; easing.type: Easing.OutCubic }
+    }
+
     Rectangle {
         id: haloSource
         visible: false
@@ -148,7 +179,7 @@ Item {
         blurMax: root.haloReach
         shadowEnabled: true
         shadowColor: Theme.fg
-        shadowOpacity: Theme.haloOpacity
+        shadowOpacity: Theme.haloOpacity + root.haloBoost
         shadowBlur: 1.0
     }
 
@@ -176,7 +207,8 @@ Item {
             }
         }
 
-        // The one shared clock: it moves and scales, it is never swapped
+        // The one shared clock: it moves and scales, it is never swapped. It fades out
+        // while an OSD is showing.
         NumberFlow {
             id: clock
             weight: Font.Bold
@@ -189,6 +221,13 @@ Item {
             animated: !ShellState.motionReduced
             transformOrigin: Item.TopLeft
             scale: ss.value / root.fullClockSize
+            opacity: IslandState.osdActive ? 0 : 1
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: IslandState.osdActive ? Motion.fadeOut : Motion.fadeIn
+                    easing.type: Easing.OutCubic
+                }
+            }
             layer.enabled: true
             layer.smooth: true
         }
@@ -204,11 +243,12 @@ Item {
             opacity: root.reveal
         }
 
-        // Temporary: click the pill to toggle idle / extended (not in the control center)
+        // Tap the pill to toggle idle / extended. This area stays on in the control
+        // center too, but ignores the click there: if nothing took it, the click would
+        // fall through to the click-anywhere layer behind the island and close everything.
         MouseArea {
             anchors.fill: parent
-            enabled: !IslandState.control
-            onClicked: IslandState.toggleExtended()
+            onClicked: if (!IslandState.control && !IslandState.osdActive) IslandState.toggleExtended()
         }
 
         // Tap the clock: extended opens the control center, the control center goes back
@@ -218,7 +258,8 @@ Item {
             y: root.tapRect.y
             width: root.tapRect.width
             height: root.tapRect.height
-            enabled: IslandState.control || (IslandState.extended && root.reveal > 0.5)
+            enabled: !IslandState.osdActive
+                && (IslandState.control || (IslandState.extended && root.reveal > 0.5))
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: IslandState.control ? IslandState.backToExtended() : IslandState.openControl()
@@ -242,6 +283,13 @@ Item {
             anchors.right: parent.right
             anchors.rightMargin: root.layouts.extended.padX
             y: root.rightColY + media.height + root.layouts.extended.dotsGap
+        }
+
+        // Volume / brightness, centered in the pill
+        OsdView {
+            layout: root.layouts.osd
+            reveal: root.osdReveal
+            anchors.centerIn: parent
         }
     }
 }

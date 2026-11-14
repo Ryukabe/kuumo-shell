@@ -18,6 +18,12 @@ Singleton {
     property int workspacesAlwaysShown: 5
     property int workspacesMax: 10
 
+    // Volume / brightness keys
+    property real osdVolumeStep: 0.05        // per key press (0..1)
+    property real osdVolumeMax: 1.0          // 1.0 = 100%
+    property int osdBrightnessStep: 5        // percent per key press
+    property int osdBrightnessMin: 1         // raw brightnessctl value the screen never goes below
+
     // Scrolling over the player skips tracks
     // true: scroll up = next track, false: scroll down = next track
     property bool mediaScrollUpIsNext: false

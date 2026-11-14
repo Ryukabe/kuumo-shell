@@ -22,6 +22,17 @@ Singleton {
     readonly property real revealStart: 0.5
     readonly property real revealEnd: 0.85
 
+    // Volume / brightness OSD: how long it stays after the last change
+    readonly property int osdHoldMs: 1500
+    // The bar's moon: a slightly bouncy spring, plus a push (value units per second,
+    // here pixels) when the level reaches 0 or 100
+    readonly property var osdFill: ({ response: 0.40, damping: 0.6 })
+    readonly property real osdEdgeKick: 200
+    // The OSD icon swap: a roll with a small bounce
+    readonly property int iconSwap: 340
+    readonly property real iconOvershoot: 1.4
+    readonly property real iconPop: 0.55      // scale the old icon shrinks to and the new one grows from
+
     // Track change in the music viewer
     readonly property int textSwap: 380       // title and artist slide + fade
     readonly property real artDip: 0.86       // art shrinks to this scale, then springs back

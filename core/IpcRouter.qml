@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Io
 import "../state"
+import "../modules/osd"
 
 // All outside-world triggers (keybinds, CLI) land here.
 // Usage: qs ipc call island toggle
@@ -16,5 +17,16 @@ Scope {
         function control(): void { IslandState.toggleControl() }
         // Close every panel and cancel pending requests (what ESC does)
         function close(): void { IslandState.closeAll() }
+    }
+
+    // Volume and brightness keys
+    IpcHandler {
+        target: "osd"
+
+        function volumeUp(): void { OsdService.volumeUp() }
+        function volumeDown(): void { OsdService.volumeDown() }
+        function volumeMute(): void { OsdService.volumeMute() }
+        function brightnessUp(): void { OsdService.brightnessUp() }
+        function brightnessDown(): void { OsdService.brightnessDown() }
     }
 }

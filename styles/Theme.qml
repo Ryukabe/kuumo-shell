@@ -43,15 +43,18 @@ Singleton {
     readonly property real glowSurge: 0.45       // extra strength at the peak of a surge
     readonly property real glowShoulder: 0.3     // strength on the shoulders of the core line
     readonly property real glowShoulderAt: 0.22  // where the shoulders sit along it (0..0.5)
-    readonly property real glowPeak: 0.6         // mist strength right at the line, in the middle
+    readonly property real glowPeak: 0.6         // mist strength at its brightest point
     readonly property real glowFalloffAt: 0.5    // how far out the mist has dropped to glowFalloff (0..1)
-    readonly property real glowFalloff: 0.45     // share of glowPeak left at that point
-    readonly property real haloOpacity: 0.25      // strength of the halo around the island
+    readonly property real glowFalloff: 0.35     // share of glowPeak left at that point
+    readonly property real haloOpacity: 0.3      // strength of the halo around the island
+    readonly property real haloOsdBoost: 0.35    // extra halo strength at full level during an OSD
 
     // ── Fonts ──
     readonly property string fontDisplay: "SF Pro Display"
     readonly property string fontText: "SF Pro Text"
     readonly property string fontMono: "SF Pro Mono"
+    // Icons are Material Symbols ligatures ("volume_up"); also installed: Outlined, Sharp
+    readonly property string fontIcon: "Material Symbols Rounded"
 
     // ── Radii ──
     readonly property int radiusSmall: 8
