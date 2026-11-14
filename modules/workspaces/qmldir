@@ -1,2 +1,2 @@
-WorkspacesView 1.0 WorkspacesView.qml
-singleton WorkspacesService 1.0 WorkspacesService.qml
+WorkspaceDots 1.0 WorkspaceDots.qml
+singleton WorkspaceService 1.0 WorkspaceService.qml

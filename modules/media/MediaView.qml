@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Shapes
 import Quickshell.Widgets
@@ -198,7 +200,7 @@ Item {
         width: root.width
         height: root.layout.dividerH
         thickness: root.layout.dividerH
-        spread: root.layout.dividerGlow
+        reach: root.layout.dividerGlow
         active: IslandState.extended
         animated: !ShellState.motionReduced
         breathes: Root.Config.mediaDividerBreathes

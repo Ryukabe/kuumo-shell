@@ -9,6 +9,15 @@ Singleton {
     // Soft moonlight halo behind the island
     property bool islandHalo: true
 
+    // While a panel is open the shell takes the keyboard so ESC can close it.
+    // Off means ESC only works when you have clicked the island first.
+    property bool panelsTakeKeyboard: true
+
+    // Workspace dots: these many always show, later ones (up to the max) only while
+    // they hold a window or are focused
+    property int workspacesAlwaysShown: 5
+    property int workspacesMax: 10
+
     // Scrolling over the player skips tracks
     // true: scroll up = next track, false: scroll down = next track
     property bool mediaScrollUpIsNext: false

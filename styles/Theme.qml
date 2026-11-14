@@ -41,9 +41,12 @@ Singleton {
     readonly property real glowRest: 0.55        // divider glow strength at rest
     readonly property real glowBreathe: 0.25     // extra strength at the top of a breath
     readonly property real glowSurge: 0.45       // extra strength at the peak of a surge
-    readonly property real glowShoulder: 0.3     // strength on the shoulders of the divider
+    readonly property real glowShoulder: 0.3     // strength on the shoulders of the core line
     readonly property real glowShoulderAt: 0.22  // where the shoulders sit along it (0..0.5)
-    readonly property real haloOpacity: 0.3      // strength of the halo around the island
+    readonly property real glowPeak: 0.6         // mist strength right at the line, in the middle
+    readonly property real glowFalloffAt: 0.5    // how far out the mist has dropped to glowFalloff (0..1)
+    readonly property real glowFalloff: 0.45     // share of glowPeak left at that point
+    readonly property real haloOpacity: 0.25      // strength of the halo around the island
 
     // ── Fonts ──
     readonly property string fontDisplay: "SF Pro Display"

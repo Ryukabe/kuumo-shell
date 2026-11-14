@@ -9,6 +9,9 @@ Singleton {
     // The clock's own path: no overshoot, so it isn't dragged by the island edge's bounce
     readonly property var content: ({ response: 0.42, damping: 1.0 })
 
+    // Workspace dots growing, shrinking and appearing
+    readonly property var dots: ({ response: 0.38, damping: 0.85 })
+
     // Fades are plain eases, never springs (milliseconds)
     readonly property int fadeIn: 240
     readonly property int fadeOut: 110
