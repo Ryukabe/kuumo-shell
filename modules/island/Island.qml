@@ -4,6 +4,7 @@ import "../.." as Root
 import "../../components"
 import "../../styles"
 import "../../state"
+import "../control"
 import "../media"
 import "../osd"
 import "../workspaces"
@@ -40,8 +41,28 @@ Item {
             // Workspace dots under the divider
             dotsGap: 8, dotSize: 6, dotActiveW: 16, dotGap: 6, dotHit: 4
         },
-        // clockCenterY: how far below the top edge the small clock's middle sits
-        control: { w: 312, h: 380, clockSize: 12, padX: 16, clockCenterY: 16 },
+        control: {
+            w: 312, h: 380, clockSize: 12, padX: 16,
+            // clockCenterY: how far below the top edge the small clock's middle sits
+            clockCenterY: 16,
+            // Content below the clock: first a row of round buttons, then the sliders.
+            // NEW: contentBottom is the space kept free under the content (and the Wi-Fi list).
+            contentTop: 48, contentBottom: 16, sectionGap: 20,
+            // Round buttons: one slot each, side by side, label underneath
+            tileSlots: 4, btnSize: 52, btnBorder: 1, btnGlowReach: 16, tileIconSize: 24, labelGap: 6,
+            // Slider rows (volume, brightness): icon, bar with a moon at the end of its fill,
+            // percentage on the right
+            rowH: 32, rowGap: 12,
+            iconSize: 20, iconGap: 12, barH: 4, dotSize: 8, glowReach: 14,
+            pctW: 40, pctGap: 12,
+            // NEW: changing page (main <-> Wi-Fi list): how far the pages slide while fading
+            pageSlide: 14,
+            // NEW: the Wi-Fi list page: header, then one row per network
+            headerH: 32, headerIconSize: 20,
+            netRowH: 48, netRowGap: 4, netPad: 12, netIconSize: 20, netIconGap: 12, netLockSize: 14,
+            // NEW: the buttons and password field that open under a network
+            netActionH: 28, netActionGap: 8, netActionPad: 14
+        },
         // Volume / brightness: icon on the left, bar with a moon at the end of its fill
         osd: {
             w: 240, h: 44, clockSize: 12, padX: 16,
@@ -146,6 +167,24 @@ Item {
         }
     }
     readonly property real osdReveal: osdRevealed * osdShown
+
+    // The control center content appears the same way. It is measured by height,
+    // from the extended height to the control height, because the control center
+    // always opens from the extended panel (the width barely changes).
+    readonly property real ctlGrowth: clamp01(
+        (sh.value - layouts.extended.h) / (layouts.control.h - layouts.extended.h))
+    readonly property real ctlRevealed: clamp01(
+        (ctlGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
+
+    // Leaving the control center (going back or an OSD) hides it fast
+    property real ctlShown: IslandState.control && !IslandState.osdActive ? 1 : 0
+    Behavior on ctlShown {
+        NumberAnimation {
+            duration: ctlShown > 0 || IslandState.osdActive || !IslandState.control ? Motion.fadeOut : 0
+            easing.type: Easing.OutCubic
+        }
+    }
+    readonly property real ctlReveal: ctlRevealed * ctlShown
 
     // ── Moonlight halo ──
     // The pill clips its children, so the halo sits behind it as a sibling. The
@@ -283,6 +322,15 @@ Item {
             anchors.right: parent.right
             anchors.rightMargin: root.layouts.extended.padX
             y: root.rightColY + media.height + root.layouts.extended.dotsGap
+        }
+
+        // Control center content (buttons, sliders, Wi-Fi list), below the small clock.
+        // Declared after the MouseAreas so taps and drags reach it.
+        ControlView {
+            layout: root.layouts.control
+            reveal: root.ctlReveal
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: root.layouts.control.contentTop
         }
 
         // Volume / brightness, centered in the pill

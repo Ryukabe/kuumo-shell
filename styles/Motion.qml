@@ -42,4 +42,9 @@ Singleton {
     // Divider glow
     readonly property int breatheMs: 3200     // one full breath
     readonly property int surgeMs: 1100       // how long a surge takes to fade
+
+    // Control center buttons
+    readonly property int pressMs: 90           // squish when a button is pressed or released
+    readonly property real pressScale: 0.92     // how small a pressed button gets
+    readonly property int searchPulseMs: 450    // one arc lighting up while Wi-Fi is connecting
 }

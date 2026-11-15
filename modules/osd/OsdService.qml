@@ -26,29 +26,32 @@ Singleton {
     }
     readonly property bool muted: root.sink && root.sink.audio ? root.sink.audio.muted : false
 
+    // Volume as 0..1 of the allowed maximum (what the bar and icon use)
+    readonly property real volumeLevel: Math.min(1, volume / Root.Config.osdVolumeMax)
+
     // ── Brightness (brightnessctl) ──
     property real brightness: 0.5
 
-    // ── What the OSD shows right now ──
-    readonly property bool isVolume: IslandState.osdKind === "volume"
-    readonly property real level: isVolume
-        ? Math.min(1, volume / Root.Config.osdVolumeMax)
-        : brightness
-    // The bar's light: off while the volume is muted
-    readonly property bool lit: isVolume ? !muted : true
-    readonly property real haloLevel: lit ? level : 0
-
-    readonly property string iconName: {
-        if (isVolume) {
-            if (muted || volume <= 0) return "volume_off"
-            if (level < lowAt) return "volume_mute"
-            if (level < midAt) return "volume_down"
-            return "volume_up"
-        }
+    // ── Icons (one per kind, so the OSD and the control panel share them) ──
+    readonly property string volumeIcon: {
+        if (muted || volume <= 0) return "volume_off"
+        if (volumeLevel < lowAt) return "volume_mute"
+        if (volumeLevel < midAt) return "volume_down"
+        return "volume_up"
+    }
+    readonly property string brightnessIcon: {
         if (brightness < lowAt) return "brightness_low"
         if (brightness < midAt) return "brightness_medium"
         return "brightness_high"
     }
+
+    // ── What the OSD shows right now ──
+    readonly property bool isVolume: IslandState.osdKind === "volume"
+    readonly property real level: isVolume ? volumeLevel : brightness
+    // The bar's light: off while the volume is muted
+    readonly property bool lit: isVolume ? !muted : true
+    readonly property real haloLevel: lit ? level : 0
+    readonly property string iconName: isVolume ? volumeIcon : brightnessIcon
 
     // Which way the last change went (1 up, -1 down). Set when the key is pressed, so
     // it is already right when the icon changes. The icon rolls that way.
@@ -90,10 +93,25 @@ Singleton {
         show("volume")
     }
 
+    // Set an exact volume (0..1 of the maximum), e.g. from a slider. No OSD.
+    function setVolume(fraction) {
+        if (!root.sink || !root.sink.audio) return
+        root.sink.audio.muted = false
+        root.sink.audio.volume = Math.max(0, Math.min(1, fraction)) * Root.Config.osdVolumeMax
+    }
+
+    // NEW: mute or unmute, e.g. from a tap on the volume icon. No OSD.
+    function toggleMute() {
+        if (!root.sink || !root.sink.audio) return
+        root.sink.audio.muted = !root.sink.audio.muted
+    }
+
     // ── Brightness actions ──
     // Key presses that arrive while brightnessctl is still running are added up and
     // applied in one go afterwards, so a held key never loses steps.
     property int _pendingSteps: 0
+    // An exact level (percent) waiting to be applied; -1 means none
+    property int _pendingPercent: -1
 
     function brightnessUp() { stepBrightness(1) }
     function brightnessDown() { stepBrightness(-1) }
@@ -107,13 +125,37 @@ Singleton {
         if ((dir > 0 && brightness >= 1 - endEps) || (dir < 0 && brightness <= endEps)) edge(dir)
     }
 
+    // Set an exact brightness (0..1), e.g. from a slider. No OSD.
+    function setBrightness(fraction) {
+        const percent = Math.round(Math.max(0, Math.min(1, fraction)) * 100)
+        brightness = percent / 100      // show it right away, brightnessctl confirms later
+        _pendingPercent = percent
+        kickBrightness()
+    }
+
+    // Runs the next waiting change, if brightnessctl is free
     function kickBrightness() {
-        if (brightnessSet.running || _pendingSteps === 0) return
+        if (brightnessSet.running) return
+
+        // An exact level from a slider goes first
+        if (_pendingPercent >= 0) {
+            const percent = _pendingPercent
+            _pendingPercent = -1
+            runBrightness(percent + "%")
+            return
+        }
+
+        if (_pendingSteps === 0) return
         const n = _pendingSteps
         _pendingSteps = 0
+        runBrightness(Math.abs(n) * Root.Config.osdBrightnessStep + "%" + (n > 0 ? "+" : "-"))
+    }
+
+    // The one place that builds the brightnessctl command
+    function runBrightness(amount) {
         brightnessSet.command = [
             "brightnessctl", "-m", "-n" + Root.Config.osdBrightnessMin,
-            "set", Math.abs(n) * Root.Config.osdBrightnessStep + "%" + (n > 0 ? "+" : "-")
+            "set", amount
         ]
         brightnessSet.running = true
     }

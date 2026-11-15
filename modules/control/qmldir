@@ -1,0 +1,5 @@
+ControlView 1.0 ControlView.qml
+MoonButton 1.0 MoonButton.qml
+NetworkRow 1.0 NetworkRow.qml
+WifiIcon 1.0 WifiIcon.qml
+WifiPage 1.0 WifiPage.qml

@@ -39,7 +39,10 @@ ShellRoot {
         // panel is open the whole window takes input, so a click anywhere closes it.
         mask: Region { item: IslandState.open ? surface : island.pill }
 
-        Item {
+        // A FocusScope, so that when something inside takes the keyboard (the Wi-Fi
+        // password field) and later lets go, the keyboard comes back here and ESC
+        // still closes the panels.
+        FocusScope {
             id: surface
             anchors.fill: parent
             focus: true
