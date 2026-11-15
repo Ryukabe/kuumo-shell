@@ -9,6 +9,11 @@ Singleton {
     // Soft moonlight halo behind the island
     property bool islandHalo: true
 
+    // Hovering the island opens the extended panel after this long (ms); leaving it closes
+    // the panel after the second delay. Longer close delay = more forgiving.
+    property int islandHoverOpenMs: 120
+    property int islandHoverCloseMs: 400
+
     // While a panel is open the shell takes the keyboard so ESC can close it.
     // Off means ESC only works when you have clicked the island first.
     property bool panelsTakeKeyboard: true
@@ -37,4 +42,15 @@ Singleton {
     property bool mediaDividerSurges: true
     // Title/artist slide and the art dip when the track changes
     property bool mediaTrackAnimation: true
+
+    // Night Light (hyprsunset): the range of its sliders and where it starts
+    property int nightLightMinK: 2500         // warmest, in Kelvin
+    property int nightLightMaxK: 9000         // coldest
+    property int nightLightDefaultK: 4500     // used until you choose one
+    property int nightLightStepK: 50          // the temperature slider moves in steps of this
+    property int nightLightMinGamma: 50       // darkest, in percent
+    property int nightLightMaxGamma: 100
+
+    // Notifications: how long a toast stays on the island (ms)
+    property int notificationToastMs: 5000
 }

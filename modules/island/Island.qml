@@ -6,6 +6,7 @@ import "../../styles"
 import "../../state"
 import "../control"
 import "../media"
+import "../notifications"
 import "../osd"
 import "../workspaces"
 
@@ -45,9 +46,13 @@ Item {
             w: 312, h: 380, clockSize: 12, padX: 16,
             // clockCenterY: how far below the top edge the small clock's middle sits
             clockCenterY: 16,
-            // Content below the clock: first a row of round buttons, then the sliders.
-            // NEW: contentBottom is the space kept free under the content (and the Wi-Fi list).
+            // Content of the main page: below the clock, first a row of round buttons,
+            // then the sliders, then the notifications card. contentBottom is the space
+            // kept free under any page.
             contentTop: 48, contentBottom: 16, sectionGap: 20,
+            // The other pages (Wi-Fi list, Night Light, notifications) have no clock, so
+            // they start higher
+            pageTop: 12,
             // Round buttons: one slot each, side by side, label underneath
             tileSlots: 4, btnSize: 52, btnBorder: 1, btnGlowReach: 16, tileIconSize: 24, labelGap: 6,
             // Slider rows (volume, brightness): icon, bar with a moon at the end of its fill,
@@ -55,29 +60,49 @@ Item {
             rowH: 32, rowGap: 12,
             iconSize: 20, iconGap: 12, barH: 4, dotSize: 8, glowReach: 14,
             pctW: 40, pctGap: 12,
-            // NEW: changing page (main <-> Wi-Fi list): how far the pages slide while fading
+            // Changing page: how far the pages slide while fading
             pageSlide: 14,
-            // NEW: the Wi-Fi list page: header, then one row per network
+            // The page header, then (Wi-Fi list) one row per network
             headerH: 32, headerIconSize: 20,
             netRowH: 48, netRowGap: 4, netPad: 12, netIconSize: 20, netIconGap: 12, netLockSize: 14,
-            // NEW: the buttons and password field that open under a network
-            netActionH: 28, netActionGap: 8, netActionPad: 14
+            // The buttons and password field that open under a network
+            netActionH: 28, netActionGap: 8, netActionPad: 14,
+            // The notifications card (bell, pulsing dot) and the rows of the notifications list
+            cardH: 64, cardIconSize: 24, bellDot: 8,
+            noteRowH: 64, noteIconSize: 36, noteIconGap: 12, noteIconRadius: 8, noteCloseSize: 18
         },
         // Volume / brightness: icon on the left, bar with a moon at the end of its fill
         osd: {
             w: 240, h: 44, clockSize: 12, padX: 16,
             iconSize: 20, iconGap: 12, barH: 4, dotSize: 8, glowReach: 14
+        },
+        // A notification: app icon on the left, then app name, title and the first line of the text
+        toast: {
+            w: 380, h: 80, clockSize: 12, padX: 16,
+            iconSize: 36, iconRadius: 8, iconGap: 12
         }
     })
+
+    // A toast shows only while the island is at rest (not while a panel is open or an OSD shows)
+    readonly property bool toastVisible: NotificationService.toastActive
+        && IslandState.mode === "idle" && !IslandState.osdActive
+
     readonly property var cur: IslandState.osdActive
         ? layouts.osd
-        : (layouts[IslandState.mode] ?? layouts.idle)
+        : toastVisible
+            ? layouts.toast
+            : (layouts[IslandState.mode] ?? layouts.idle)
 
     readonly property real idleScale: layouts.idle.clockSize / fullClockSize
     readonly property real extClockScale: layouts.extended.clockSize / fullClockSize
     readonly property real ctlClockScale: layouts.control.clockSize / fullClockSize
 
     function clamp01(v) { return Math.max(0, Math.min(1, v)) }
+
+    // The clock fades out during an OSD or a toast, and on the control center's other
+    // pages (Wi-Fi list, Night Light, notifications); it only shows on the main page
+    readonly property bool clockHidden: IslandState.osdActive || toastVisible
+        || (IslandState.control && controlView.page !== "main")
 
     // Height of the clock + date block when extended, used to center it vertically
     readonly property real clockBlockH:
@@ -168,6 +193,20 @@ Item {
     }
     readonly property real osdReveal: osdRevealed * osdShown
 
+    // The toast content appears the same way, measured against the toast's own size
+    readonly property real toastGrowth: clamp01(
+        (sw.value - layouts.idle.w) / (layouts.toast.w - layouts.idle.w))
+    readonly property real toastRevealed: clamp01(
+        (toastGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
+    property real toastShown: toastVisible ? 1 : 0
+    Behavior on toastShown {
+        NumberAnimation {
+            duration: toastVisible ? 0 : Motion.fadeOut
+            easing.type: Easing.OutCubic
+        }
+    }
+    readonly property real toastReveal: toastRevealed * toastShown
+
     // The control center content appears the same way. It is measured by height,
     // from the extended height to the control height, because the control center
     // always opens from the extended panel (the width barely changes).
@@ -185,6 +224,23 @@ Item {
         }
     }
     readonly property real ctlReveal: ctlRevealed * ctlShown
+
+    // ── Opening and closing by hover ──
+    // Hovering the island opens the extended panel after a short delay; leaving it closes
+    // the panel after a slightly longer one. Only the extended panel closes this way: the
+    // control center stays until you click outside or press ESC. While a toast shows,
+    // hovering keeps the toast instead of opening the panel.
+    Timer {
+        id: openTimer
+        interval: Root.Config.islandHoverOpenMs
+        onTriggered: if (pillHover.hovered && IslandState.mode === "idle" && !root.toastVisible) IslandState.expand()
+    }
+
+    Timer {
+        id: closeTimer
+        interval: Root.Config.islandHoverCloseMs
+        onTriggered: if (!pillHover.hovered && IslandState.extended) IslandState.collapse()
+    }
 
     // ── Moonlight halo ──
     // The pill clips its children, so the halo sits behind it as a sibling. The
@@ -232,6 +288,22 @@ Item {
         x: (root.width - width) / 2
         y: root.topGap
 
+        // Watches the pointer over the whole pill (children included): opens and closes
+        // by hover, and keeps a toast open while the pointer is on it
+        HoverHandler {
+            id: pillHover
+            onHoveredChanged: {
+                NotificationService.toastHeld = hovered
+                if (hovered) {
+                    closeTimer.stop()
+                    if (IslandState.mode === "idle" && !root.toastVisible) openTimer.restart()
+                } else {
+                    openTimer.stop()
+                    if (IslandState.extended) closeTimer.restart()
+                }
+            }
+        }
+
         // Hover highlight behind the clock: shows that it can be tapped
         Rectangle {
             x: root.tapRect.x
@@ -247,7 +319,7 @@ Item {
         }
 
         // The one shared clock: it moves and scales, it is never swapped. It fades out
-        // while an OSD is showing.
+        // during an OSD or a toast, and on the control center's other pages.
         NumberFlow {
             id: clock
             weight: Font.Bold
@@ -260,10 +332,10 @@ Item {
             animated: !ShellState.motionReduced
             transformOrigin: Item.TopLeft
             scale: ss.value / root.fullClockSize
-            opacity: IslandState.osdActive ? 0 : 1
+            opacity: root.clockHidden ? 0 : 1
             Behavior on opacity {
                 NumberAnimation {
-                    duration: IslandState.osdActive ? Motion.fadeOut : Motion.fadeIn
+                    duration: root.clockHidden ? Motion.fadeOut : Motion.fadeIn
                     easing.type: Easing.OutCubic
                 }
             }
@@ -282,15 +354,15 @@ Item {
             opacity: root.reveal
         }
 
-        // Tap the pill to toggle idle / extended. This area stays on in the control
-        // center too, but ignores the click there: if nothing took it, the click would
-        // fall through to the click-anywhere layer behind the island and close everything.
+        // Takes clicks on the empty parts of the pill and does nothing with them. If nothing
+        // took them, they would fall through to the click-anywhere layer behind the island
+        // and close everything.
         MouseArea {
             anchors.fill: parent
-            onClicked: if (!IslandState.control && !IslandState.osdActive) IslandState.toggleExtended()
         }
 
-        // Tap the clock: extended opens the control center, the control center goes back
+        // Tap the clock: extended opens the control center, the control center goes back.
+        // Not on the control center's other pages, where the clock is hidden.
         MouseArea {
             id: tapArea
             x: root.tapRect.x
@@ -298,7 +370,9 @@ Item {
             width: root.tapRect.width
             height: root.tapRect.height
             enabled: !IslandState.osdActive
-                && (IslandState.control || (IslandState.extended && root.reveal > 0.5))
+                && (IslandState.control
+                    ? controlView.page === "main"
+                    : IslandState.extended && root.reveal > 0.5)
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: IslandState.control ? IslandState.backToExtended() : IslandState.openControl()
@@ -324,13 +398,22 @@ Item {
             y: root.rightColY + media.height + root.layouts.extended.dotsGap
         }
 
-        // Control center content (buttons, sliders, Wi-Fi list), below the small clock.
+        // Control center content (buttons, sliders, other pages). It starts at pageTop;
+        // the main page moves itself down to make room for the clock.
         // Declared after the MouseAreas so taps and drags reach it.
         ControlView {
+            id: controlView
             layout: root.layouts.control
             reveal: root.ctlReveal
             anchors.horizontalCenter: parent.horizontalCenter
-            y: root.layouts.control.contentTop
+            y: root.layouts.control.pageTop
+        }
+
+        // A notification, centered in the pill
+        ToastView {
+            layout: root.layouts.toast
+            reveal: root.toastReveal
+            anchors.centerIn: parent
         }
 
         // Volume / brightness, centered in the pill

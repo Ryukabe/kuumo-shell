@@ -1,0 +1,2 @@
+singleton NotificationService 1.0 NotificationService.qml
+ToastView 1.0 ToastView.qml

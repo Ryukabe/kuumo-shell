@@ -8,7 +8,6 @@ QtObject {
     readonly property color elevatedBg: "#1b1d22"  // Cloud Shadow (pills, hover, popups)
     readonly property color border: "#272a30"      // Horizon Mist
     readonly property color fgMuted: "#7e8490"     // Dim Starlight
-    readonly property color subtext: "#7e8490"
     readonly property color fg: "#f4f6f9"          // Cloud Moon
     readonly property color accent: "#ffffff"      // Full Moon
 

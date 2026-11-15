@@ -21,7 +21,6 @@ Singleton {
     readonly property color elevatedBg: active.elevatedBg
     readonly property color border: active.border
     readonly property color fgMuted: active.fgMuted
-    readonly property color subtext: active.subtext
     readonly property color fg: active.fg
     readonly property color accent: active.accent
     readonly property color red: active.red

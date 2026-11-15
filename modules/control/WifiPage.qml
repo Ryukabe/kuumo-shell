@@ -42,57 +42,14 @@ Item {
     Component.onCompleted: syncModel(WifiService.networks)
 
     // ── Header: back arrow, title, and a note while scanning ──
-    Item {
+    PageHeader {
         id: header
+        layout: root.layout
         width: parent.width
-        height: root.layout.headerH
-
-        // Back arrow
-        Item {
-            id: backButton
-            width: root.layout.headerH
-            height: width
-
-            Text {
-                anchors.centerIn: parent
-                text: "arrow_back"
-                color: Qt.tint(Theme.fgMuted, Qt.alpha(Theme.fg, backArea.containsMouse ? 1 : 0))
-                font.family: Theme.fontIcon
-                font.pixelSize: root.layout.headerIconSize
-            }
-
-            MouseArea {
-                id: backArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.back()
-            }
-        }
-
-        Text {
-            x: backButton.width
-            anchors.verticalCenter: parent.verticalCenter
-            text: "Wi-Fi"
-            color: Theme.fg
-            font.family: Theme.fontText
-            font.pixelSize: Theme.fontSizeMd
-            font.weight: Font.DemiBold
-        }
-
-        // Shown while a scan is running
-        Text {
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            text: "Scanning…"
-            color: Theme.fgMuted
-            font.family: Theme.fontText
-            font.pixelSize: Theme.fontSizeXs
-            opacity: WifiService.scanning && WifiService.radioOn ? 1 : 0
-            Behavior on opacity {
-                NumberAnimation { duration: Motion.fadeIn; easing.type: Easing.OutCubic }
-            }
-        }
+        title: "Wi-Fi"
+        note: "Scanning…"
+        noteShown: WifiService.scanning && WifiService.radioOn
+        onBack: root.back()
     }
 
     // ── The networks ──
