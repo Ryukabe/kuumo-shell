@@ -1,5 +1,5 @@
 {
-    "enabled": true,
+    "enabled": false,
     "gamma": 100,
-    "temperature": 4300
+    "temperature": 3500
 }

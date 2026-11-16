@@ -1,0 +1,3 @@
+singleton LauncherService LauncherService.qml
+singleton RatesService RatesService.qml
+LauncherView LauncherView.qml

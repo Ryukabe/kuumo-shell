@@ -15,6 +15,8 @@ Scope {
 
         // Open the control center from anywhere, or close it again if it is open
         function control(): void { IslandState.toggleControl() }
+        // Open the launcher from anywhere, or close it again if it is open
+        function launcher(): void { IslandState.toggleLauncher() }
         // Close every panel and cancel pending requests (what ESC does)
         function close(): void { IslandState.closeAll() }
     }

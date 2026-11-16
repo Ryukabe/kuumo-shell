@@ -12,7 +12,8 @@ Singleton {
     // The most recently seen player. Set when a player appears or starts playing.
     property MprisPlayer recent: null
 
-    readonly property var players: Mpris.players.values
+    readonly property var playerModel: Mpris.players
+    readonly property var players: playerModel.values
 
     // A playing player wins (the most recent one if several play).
     // Otherwise the most recent player, or the last one in the list.

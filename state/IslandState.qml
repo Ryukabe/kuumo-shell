@@ -2,10 +2,11 @@ pragma Singleton
 import Quickshell
 
 Singleton {
-    // "idle" | "extended" | "control" (picker comes later)
+    // "idle" | "extended" | "control" | "launcher" (picker comes later)
     property string mode: "idle"
     readonly property bool extended: mode === "extended"
     readonly property bool control: mode === "control"
+    readonly property bool launcher: mode === "launcher"
     // Any panel open, i.e. the island is not at rest. The OSD does not count: it
     // never takes the keyboard or the screen.
     readonly property bool open: mode !== "idle"
@@ -17,6 +18,10 @@ Singleton {
     function openControl() { mode = "control" }
     function backToExtended() { mode = "extended" }
     function toggleControl() { control ? collapse() : openControl() }
+
+    // The launcher opens from any mode and closes back to rest
+    function openLauncher() { mode = "launcher" }
+    function toggleLauncher() { launcher ? collapse() : openLauncher() }
 
     // The OSD (volume, brightness) borrows the island for a moment on top of whatever
     // mode it is in, then gives it back.

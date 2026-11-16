@@ -14,13 +14,18 @@ Singleton {
     id: root
 
     // ── Focus (do not disturb) ──
-    // On: notifications are still collected in the list, but no toast pops up
-    readonly property bool focusOn: saved.focusOn
+    // On: notifications are still collected in the list, but no toast pops up.
+    // It is kept in state/notifications.json, so it survives a restart.
+    property bool focusOn: false
 
-    function toggleFocus() { saved.focusOn = !saved.focusOn }
+    function toggleFocus() {
+        focusOn = !focusOn
+        save()
+    }
 
     // ── The list ──
-    readonly property var items: Array.from(server.trackedNotifications.values).reverse()  // newest first
+    readonly property var notificationModel: server.trackedNotifications
+    readonly property var items: Array.from(notificationModel["values"]).reverse()  // newest first
     readonly property int count: items.length
     readonly property string latestSummary: count > 0 ? items[0].summary : ""
 
@@ -35,7 +40,7 @@ Singleton {
     function dismiss(notification) { notification.dismiss() }
 
     function clearAll() {
-        for (const notification of Array.from(server.trackedNotifications.values)) notification.dismiss()
+        for (const notification of Array.from(notificationModel["values"])) notification.dismiss()
     }
 
     // The picture for a notification: the image it came with, else its app's icon
@@ -93,15 +98,21 @@ Singleton {
     }
 
     // ── Saving ──
+    function save() {
+        store.setText(JSON.stringify({ focusOn: focusOn }))
+    }
+
     FileView {
+        id: store
         path: Quickshell.shellPath("state/notifications.json")
 
-        // Until the file exists these defaults apply; the first change creates it
-        adapter: JsonAdapter {
-            id: saved
-            property bool focusOn: false
+        // Read once at start. With no file yet (or one that cannot be read) Focus stays off.
+        onLoaded: {
+            try {
+                root.focusOn = JSON.parse(store.text()).focusOn === true
+            } catch (error) {
+                root.focusOn = false
+            }
         }
-
-        onAdapterUpdated: writeAdapter()
     }
 }

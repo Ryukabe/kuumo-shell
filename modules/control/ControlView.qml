@@ -5,14 +5,16 @@ import "../display"
 import "../network"
 import "../notifications"
 import "../osd"
+import "../phone"
 
 // The content of the control center. Pages:
 //   main:          a row of round moon buttons, the volume and brightness sliders, and the
 //                  notifications card
 //   wifi:          the list of Wi-Fi networks (tap the name under the Wi-Fi button)
 //   nightlight:    temperature and gamma (tap the name under the Night Light button)
+//   kdeconnect:    the phone's battery and actions (tap the KDE Connect button)
 //   notifications: the list of notifications (tap the card at the bottom)
-// Island.qml places it and drives `reveal`; later stages add more buttons to the row.
+// Island.qml places it and drives `reveal`.
 // The view starts at `pageTop`. Only the main page shows the clock, so it moves itself down.
 Item {
     id: root
@@ -31,11 +33,12 @@ Item {
 
     // ── Pages ──
     // Island.qml reads this to hide the clock on every page except the main one
-    property string page: "main"    // "main" | "wifi" | "nightlight" | "notifications"
+    property string page: "main"    // "main" | "wifi" | "nightlight" | "kdeconnect" | "notifications"
 
     function openPage(name) {
         page = name
         if (name === "wifi") WifiService.openList()
+        if (name === "kdeconnect") KdeConnectService.refresh()
         if (name === "notifications") NotificationService.markAllRead()
     }
 
@@ -116,6 +119,27 @@ Item {
                     }
                 }
 
+                // KDE Connect has no on/off, so the moon and the name both open its page
+                MoonButton {
+                    id: kdeConnectButton
+                    layout: root.layout
+                    width: root.width / root.layout.tileSlots
+                    lit: KdeConnectService.reachable
+                    label: KdeConnectService.statusText
+                    labelTappable: true
+                    onClicked: root.openPage("kdeconnect")
+                    onLabelClicked: root.openPage("kdeconnect")
+
+                    PhoneIcon {
+                        anchors.centerIn: parent
+                        size: root.layout.tileIconSize
+                        color: kdeConnectButton.iconColor
+                        level: KdeConnectService.batteryLevel
+                        active: KdeConnectService.reachable
+                        charging: KdeConnectService.charging
+                    }
+                }
+
                 MoonButton {
                     id: focusButton
                     layout: root.layout
@@ -188,6 +212,20 @@ Item {
         height: parent.height
 
         NightLightPage {
+            anchors.fill: parent
+            layout: root.layout
+            onBack: root.backToMain()
+        }
+    }
+
+    // ── KDE Connect page ──
+    PageFrame {
+        layout: root.layout
+        shown: root.page === "kdeconnect"
+        width: parent.width
+        height: parent.height
+
+        KdeConnectPage {
             anchors.fill: parent
             layout: root.layout
             onBack: root.backToMain()

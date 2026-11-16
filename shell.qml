@@ -25,8 +25,9 @@ ShellRoot {
         // Lets layer rules (blur, animations) find this surface
         WlrLayershell.namespace: "kuumo-shell"
 
-        // While a panel is open the shell takes the keyboard, so ESC reaches it
-        WlrLayershell.keyboardFocus: IslandState.open && Root.Config.panelsTakeKeyboard
+        // While a panel is open the shell takes the keyboard, so ESC reaches it. The
+        // launcher always takes it, because you type into it.
+        WlrLayershell.keyboardFocus: IslandState.open && (Root.Config.panelsTakeKeyboard || IslandState.launcher)
             ? WlrKeyboardFocus.Exclusive
             : WlrKeyboardFocus.None
 

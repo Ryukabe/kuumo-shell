@@ -5,6 +5,7 @@ import "../../components"
 import "../../styles"
 import "../../state"
 import "../control"
+import "../launcher"
 import "../media"
 import "../notifications"
 import "../osd"
@@ -50,8 +51,8 @@ Item {
             // then the sliders, then the notifications card. contentBottom is the space
             // kept free under any page.
             contentTop: 48, contentBottom: 16, sectionGap: 20,
-            // The other pages (Wi-Fi list, Night Light, notifications) have no clock, so
-            // they start higher
+            // The other pages (Wi-Fi list, Night Light, KDE Connect, notifications) have no
+            // clock, so they start higher
             pageTop: 12,
             // Round buttons: one slot each, side by side, label underneath
             tileSlots: 4, btnSize: 52, btnBorder: 1, btnGlowReach: 16, tileIconSize: 24, labelGap: 6,
@@ -65,11 +66,23 @@ Item {
             // The page header, then (Wi-Fi list) one row per network
             headerH: 32, headerIconSize: 20,
             netRowH: 48, netRowGap: 4, netPad: 12, netIconSize: 20, netIconGap: 12, netLockSize: 14,
-            // The buttons and password field that open under a network
+            // The buttons and password field that open under a network (also the action
+            // buttons of the KDE Connect page)
             netActionH: 28, netActionGap: 8, netActionPad: 14,
             // The notifications card (bell, pulsing dot) and the rows of the notifications list
             cardH: 64, cardIconSize: 24, bellDot: 8,
-            noteRowH: 64, noteIconSize: 36, noteIconGap: 12, noteIconRadius: 8, noteCloseSize: 18
+            noteRowH: 64, noteIconSize: 36, noteIconGap: 12, noteIconRadius: 8, noteCloseSize: 18,
+            // The phone's battery ring on the KDE Connect page
+            phoneIconSize: 56
+        },
+        // Search field on top, one row per matching app below. The height is not here:
+        // it grows with the number of results (see launcherLayout).
+        launcher: {
+            w: 436, clockSize: 12, padX: 16, padTop: 12, padBottom: 12,
+            // Search field and the gap above the list
+            searchH: 32, fontSize: 15, listGap: 8,
+            // Result rows: at most maxRows show, then the list scrolls
+            maxRows: 6, rowH: 40, rowPad: 12, iconSize: 24, iconGap: 12
         },
         // Volume / brightness: icon on the left, bar with a moon at the end of its fill
         osd: {
@@ -87,11 +100,22 @@ Item {
     readonly property bool toastVisible: NotificationService.toastActive
         && IslandState.mode === "idle" && !IslandState.osdActive
 
+    // The launcher is as tall as its search field plus one row per result (up to maxRows)
+    readonly property int launcherRows: Math.min(LauncherService.results.length, layouts.launcher.maxRows)
+    readonly property var launcherLayout: ({
+        w: layouts.launcher.w,
+        h: layouts.launcher.padTop + layouts.launcher.searchH + layouts.launcher.padBottom
+            + (launcherRows > 0 ? layouts.launcher.listGap + launcherRows * layouts.launcher.rowH : 0),
+        clockSize: layouts.launcher.clockSize
+    })
+
     readonly property var cur: IslandState.osdActive
         ? layouts.osd
         : toastVisible
             ? layouts.toast
-            : (layouts[IslandState.mode] ?? layouts.idle)
+            : IslandState.launcher
+                ? launcherLayout
+                : (layouts[IslandState.mode] ?? layouts.idle)
 
     readonly property real idleScale: layouts.idle.clockSize / fullClockSize
     readonly property real extClockScale: layouts.extended.clockSize / fullClockSize
@@ -99,9 +123,11 @@ Item {
 
     function clamp01(v) { return Math.max(0, Math.min(1, v)) }
 
-    // The clock fades out during an OSD or a toast, and on the control center's other
-    // pages (Wi-Fi list, Night Light, notifications); it only shows on the main page
+    // The clock fades out during an OSD, a toast or the launcher, and on the control
+    // center's other pages (Wi-Fi list, Night Light, KDE Connect, notifications); it
+    // only shows on the main page
     readonly property bool clockHidden: IslandState.osdActive || toastVisible
+        || IslandState.launcher
         || (IslandState.control && controlView.page !== "main")
 
     // Height of the clock + date block when extended, used to center it vertically
@@ -172,7 +198,7 @@ Item {
     property real shown: IslandState.extended && !IslandState.osdActive ? 1 : 0
     Behavior on shown {
         NumberAnimation {
-            duration: shown > 0 || IslandState.osdActive || !IslandState.extended ? Motion.fadeOut : 0
+            duration: root.shown > 0 || IslandState.osdActive || !IslandState.extended ? Motion.fadeOut : 0
             easing.type: Easing.OutCubic
         }
     }
@@ -201,7 +227,7 @@ Item {
     property real toastShown: toastVisible ? 1 : 0
     Behavior on toastShown {
         NumberAnimation {
-            duration: toastVisible ? 0 : Motion.fadeOut
+            duration: root.toastVisible ? 0 : Motion.fadeOut
             easing.type: Easing.OutCubic
         }
     }
@@ -219,17 +245,34 @@ Item {
     property real ctlShown: IslandState.control && !IslandState.osdActive ? 1 : 0
     Behavior on ctlShown {
         NumberAnimation {
-            duration: ctlShown > 0 || IslandState.osdActive || !IslandState.control ? Motion.fadeOut : 0
+            duration: root.ctlShown > 0 || IslandState.osdActive || !IslandState.control ? Motion.fadeOut : 0
             easing.type: Easing.OutCubic
         }
     }
     readonly property real ctlReveal: ctlRevealed * ctlShown
 
+    // The launcher content appears measured by width, from idle to the launcher width.
+    // Its height changes with the results, so height would make it flicker while typing.
+    readonly property real launcherGrowth: clamp01(
+        (sw.value - layouts.idle.w) / (layouts.launcher.w - layouts.idle.w))
+    readonly property real launcherRevealed: clamp01(
+        (launcherGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
+
+    // Leaving the launcher (closing or an OSD) hides it fast
+    property real launcherShown: IslandState.launcher && !IslandState.osdActive ? 1 : 0
+    Behavior on launcherShown {
+        NumberAnimation {
+            duration: root.launcherShown > 0 || IslandState.osdActive || !IslandState.launcher ? Motion.fadeOut : 0
+            easing.type: Easing.OutCubic
+        }
+    }
+    readonly property real launcherReveal: launcherRevealed * launcherShown
+
     // ── Opening and closing by hover ──
     // Hovering the island opens the extended panel after a short delay; leaving it closes
     // the panel after a slightly longer one. Only the extended panel closes this way: the
-    // control center stays until you click outside or press ESC. While a toast shows,
-    // hovering keeps the toast instead of opening the panel.
+    // control center and the launcher stay until you click outside or press ESC. While a
+    // toast shows, hovering keeps the toast instead of opening the panel.
     Timer {
         id: openTimer
         interval: Root.Config.islandHoverOpenMs
@@ -319,7 +362,7 @@ Item {
         }
 
         // The one shared clock: it moves and scales, it is never swapped. It fades out
-        // during an OSD or a toast, and on the control center's other pages.
+        // during an OSD, a toast or the launcher, and on the control center's other pages.
         NumberFlow {
             id: clock
             weight: Font.Bold
@@ -407,6 +450,16 @@ Item {
             reveal: root.ctlReveal
             anchors.horizontalCenter: parent.horizontalCenter
             y: root.layouts.control.pageTop
+        }
+
+        // Launcher: search field and app list, as tall as the island
+        LauncherView {
+            layout: root.layouts.launcher
+            reveal: root.launcherReveal
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 0
+            width: root.layouts.launcher.w
+            height: root.launcherLayout.h
         }
 
         // A notification, centered in the pill
