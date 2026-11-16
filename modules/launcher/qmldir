@@ -1,3 +1,4 @@
 singleton LauncherService LauncherService.qml
 singleton RatesService RatesService.qml
+singleton CommandService CommandService.qml
 LauncherView LauncherView.qml

@@ -82,7 +82,10 @@ Item {
             // Search field and the gap above the list
             searchH: 32, fontSize: 15, listGap: 8,
             // Result rows: at most maxRows show, then the list scrolls
-            maxRows: 6, rowH: 40, rowPad: 12, iconSize: 24, iconGap: 12
+            maxRows: 6, rowH: 40, rowPad: 12, iconSize: 24, iconGap: 12,
+            // The emoji picker: a grid of emojiCols columns and at most emojiRows rows of
+            // square cells, and a line under it with the name of the emoji you are on
+            emojiCols: 9, emojiRows: 4, emojiCell: 44, emojiSize: 26, emojiCaptionH: 28
         },
         // Volume / brightness: icon on the left, bar with a moon at the end of its fill
         osd: {
@@ -100,12 +103,20 @@ Item {
     readonly property bool toastVisible: NotificationService.toastActive
         && IslandState.mode === "idle" && !IslandState.osdActive
 
-    // The launcher is as tall as its search field plus one row per result (up to maxRows)
-    readonly property int launcherRows: Math.min(LauncherService.results.length, layouts.launcher.maxRows)
+    // How tall the launcher's list is: one row per result (up to maxRows), or in the emoji
+    // picker the rows of emoji (up to emojiRows) plus the caption line
+    readonly property int launcherListH: {
+        const L = layouts.launcher
+        if (LauncherService.gridView)
+            return Math.min(Math.ceil(LauncherService.results.length / L.emojiCols), L.emojiRows) * L.emojiCell + L.emojiCaptionH
+        return Math.min(LauncherService.results.length, L.maxRows) * L.rowH
+    }
+
+    // The launcher is as tall as its search field plus its list
     readonly property var launcherLayout: ({
         w: layouts.launcher.w,
         h: layouts.launcher.padTop + layouts.launcher.searchH + layouts.launcher.padBottom
-            + (launcherRows > 0 ? layouts.launcher.listGap + launcherRows * layouts.launcher.rowH : 0),
+            + (launcherListH > 0 ? layouts.launcher.listGap + launcherListH : 0),
         clockSize: layouts.launcher.clockSize
     })
 
@@ -452,7 +463,7 @@ Item {
             y: root.layouts.control.pageTop
         }
 
-        // Launcher: search field and app list, as tall as the island
+        // Launcher: search field and the list (or the emoji grid), as tall as the island
         LauncherView {
             layout: root.layouts.launcher
             reveal: root.launcherReveal
