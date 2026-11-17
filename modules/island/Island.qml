@@ -4,11 +4,13 @@ import "../.." as Root
 import "../../components"
 import "../../styles"
 import "../../state"
+import "../clipboard"
 import "../control"
 import "../launcher"
 import "../media"
 import "../notifications"
 import "../osd"
+import "../power"
 import "../workspaces"
 
 Item {
@@ -87,6 +89,25 @@ Item {
             // square cells, and a line under it with the name of the emoji you are on
             emojiCols: 9, emojiRows: 4, emojiCell: 44, emojiSize: 26, emojiCaptionH: 28
         },
+        // The clipboard history: search field on top, one row per item below. The height
+        // is not here either (see clipboardLayout).
+        clipboard: {
+            w: 436, clockSize: 12, padX: 16, padTop: 12, padBottom: 12,
+            searchH: 32, fontSize: 15, listGap: 8,
+            // Rows: at most maxRows show, then the list scrolls. A row has a square on the
+            // left (the picture of an image, else an icon), the preview of up to previewLines
+            // lines with the size and age under it, and the pin and delete buttons on the right.
+            maxRows: 5, rowH: 60, rowPad: 12, thumb: 40, iconSize: 24, iconGap: 12,
+            previewFont: 13, previewLines: 2, actionSize: 20, actionGap: 8
+        },
+        // The power menu: one row of round buttons, `slots` of them across the width, each
+        // with its label underneath. h = padTop + btnSize + labelGap + the label's height
+        // (about 14) + padBottom. The ring of a hold button is holdRingW wide.
+        power: {
+            w: 436, h: 112, clockSize: 12, padX: 22, padTop: 20,
+            slots: 5, btnSize: 52, btnBorder: 1, btnGlowReach: 16, tileIconSize: 24, labelGap: 6,
+            holdRingW: 3
+        },
         // Volume / brightness: icon on the left, bar with a moon at the end of its fill
         osd: {
             w: 240, h: 44, clockSize: 12, padX: 16,
@@ -120,13 +141,28 @@ Item {
         clockSize: layouts.launcher.clockSize
     })
 
+    // The clipboard is as tall as its search field plus one row per item (up to maxRows).
+    // It keeps one row of room when there is nothing to list, for the "nothing copied" text.
+    // (Reading ClipboardService here also starts it when the shell starts.)
+    readonly property int clipboardRows: Math.max(1, Math.min(ClipboardService.rows.length, layouts.clipboard.maxRows))
+    readonly property var clipboardLayout: ({
+        w: layouts.clipboard.w,
+        h: layouts.clipboard.padTop + layouts.clipboard.searchH + layouts.clipboard.padBottom
+            + layouts.clipboard.listGap + clipboardRows * layouts.clipboard.rowH,
+        clockSize: layouts.clipboard.clockSize
+    })
+
+    // The power menu has a fixed size, so layouts.power is used as it is (the "power"
+    // mode name finds it in the last step below).
     readonly property var cur: IslandState.osdActive
         ? layouts.osd
         : toastVisible
             ? layouts.toast
             : IslandState.launcher
                 ? launcherLayout
-                : (layouts[IslandState.mode] ?? layouts.idle)
+                : IslandState.clipboard
+                    ? clipboardLayout
+                    : (layouts[IslandState.mode] ?? layouts.idle)
 
     readonly property real idleScale: layouts.idle.clockSize / fullClockSize
     readonly property real extClockScale: layouts.extended.clockSize / fullClockSize
@@ -134,11 +170,11 @@ Item {
 
     function clamp01(v) { return Math.max(0, Math.min(1, v)) }
 
-    // The clock fades out during an OSD, a toast or the launcher, and on the control
-    // center's other pages (Wi-Fi list, Night Light, KDE Connect, notifications); it
-    // only shows on the main page
+    // The clock fades out during an OSD, a toast, the launcher, the clipboard or the power
+    // menu, and on the control center's other pages (Wi-Fi list, Night Light, KDE Connect,
+    // notifications); it only shows on the main page
     readonly property bool clockHidden: IslandState.osdActive || toastVisible
-        || IslandState.launcher
+        || IslandState.launcher || IslandState.clipboard || IslandState.power
         || (IslandState.control && controlView.page !== "main")
 
     // Height of the clock + date block when extended, used to center it vertically
@@ -279,11 +315,44 @@ Item {
     }
     readonly property real launcherReveal: launcherRevealed * launcherShown
 
+    // The clipboard content appears the same way as the launcher's, measured by width
+    readonly property real clipboardGrowth: clamp01(
+        (sw.value - layouts.idle.w) / (layouts.clipboard.w - layouts.idle.w))
+    readonly property real clipboardRevealed: clamp01(
+        (clipboardGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
+
+    // Leaving the clipboard (closing or an OSD) hides it fast
+    property real clipboardShown: IslandState.clipboard && !IslandState.osdActive ? 1 : 0
+    Behavior on clipboardShown {
+        NumberAnimation {
+            duration: root.clipboardShown > 0 || IslandState.osdActive || !IslandState.clipboard ? Motion.fadeOut : 0
+            easing.type: Easing.OutCubic
+        }
+    }
+    readonly property real clipboardReveal: clipboardRevealed * clipboardShown
+
+    // The power menu content appears the same way, measured by width
+    readonly property real powerGrowth: clamp01(
+        (sw.value - layouts.idle.w) / (layouts.power.w - layouts.idle.w))
+    readonly property real powerRevealed: clamp01(
+        (powerGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
+
+    // Leaving the power menu (closing or an OSD) hides it fast
+    property real powerShown: IslandState.power && !IslandState.osdActive ? 1 : 0
+    Behavior on powerShown {
+        NumberAnimation {
+            duration: root.powerShown > 0 || IslandState.osdActive || !IslandState.power ? Motion.fadeOut : 0
+            easing.type: Easing.OutCubic
+        }
+    }
+    readonly property real powerReveal: powerRevealed * powerShown
+
     // ── Opening and closing by hover ──
     // Hovering the island opens the extended panel after a short delay; leaving it closes
     // the panel after a slightly longer one. Only the extended panel closes this way: the
-    // control center and the launcher stay until you click outside or press ESC. While a
-    // toast shows, hovering keeps the toast instead of opening the panel.
+    // control center, the launcher, the clipboard and the power menu stay until you click
+    // outside or press ESC. While a toast shows, hovering keeps the toast instead of
+    // opening the panel.
     Timer {
         id: openTimer
         interval: Root.Config.islandHoverOpenMs
@@ -373,7 +442,8 @@ Item {
         }
 
         // The one shared clock: it moves and scales, it is never swapped. It fades out
-        // during an OSD, a toast or the launcher, and on the control center's other pages.
+        // during an OSD, a toast, the launcher, the clipboard or the power menu, and on
+        // the control center's other pages.
         NumberFlow {
             id: clock
             weight: Font.Bold
@@ -471,6 +541,26 @@ Item {
             y: 0
             width: root.layouts.launcher.w
             height: root.launcherLayout.h
+        }
+
+        // Clipboard: search field and the history list, as tall as the island
+        ClipboardView {
+            layout: root.layouts.clipboard
+            reveal: root.clipboardReveal
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 0
+            width: root.layouts.clipboard.w
+            height: root.clipboardLayout.h
+        }
+
+        // Power menu: one row of round buttons, as tall as the island
+        PowerView {
+            layout: root.layouts.power
+            reveal: root.powerReveal
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 0
+            width: root.layouts.power.w
+            height: root.layouts.power.h
         }
 
         // A notification, centered in the pill

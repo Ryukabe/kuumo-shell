@@ -23,6 +23,20 @@ Singleton {
         save()
     }
 
+    // ── Quiet start ──
+    // When the shell starts, some apps send their notifications again (to them a restart
+    // looks like a new notification service), and Focus is still being read from its file.
+    // So for the first startupQuietMs no toast pops up. Notifications are still collected.
+    // (This could move into Config.qml with the other notification settings.)
+    readonly property int startupQuietMs: 5000
+    property bool starting: true
+
+    Timer {
+        interval: root.startupQuietMs
+        running: true
+        onTriggered: root.starting = false
+    }
+
     // ── The list ──
     readonly property var notificationModel: server.trackedNotifications
     readonly property var items: Array.from(notificationModel["values"]).reverse()  // newest first
@@ -93,7 +107,8 @@ Singleton {
         onNotification: notification => {
             notification.tracked = true    // keeps it in the list
             root.unread += 1
-            if (!root.focusOn) root.showToast(notification)
+            // No toast with Focus on, or during the quiet start
+            if (!root.focusOn && !root.starting) root.showToast(notification)
         }
     }
 

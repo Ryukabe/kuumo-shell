@@ -47,4 +47,9 @@ Singleton {
     readonly property int pressMs: 90           // squish when a button is pressed or released
     readonly property real pressScale: 0.92     // how small a pressed button gets
     readonly property int searchPulseMs: 450    // one arc lighting up while Wi-Fi is connecting
+
+    // Power menu: how long a dangerous button must be held, and how fast its ring
+    // drains back when you let go early
+    readonly property int holdMs: 900
+    readonly property int holdReleaseMs: 180
 }

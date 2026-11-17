@@ -26,8 +26,9 @@ ShellRoot {
         WlrLayershell.namespace: "kuumo-shell"
 
         // While a panel is open the shell takes the keyboard, so ESC reaches it. The
-        // launcher always takes it, because you type into it.
-        WlrLayershell.keyboardFocus: IslandState.open && (Root.Config.panelsTakeKeyboard || IslandState.launcher)
+        // launcher and the clipboard always take it, because you type into them.
+        WlrLayershell.keyboardFocus: IslandState.open
+            && (Root.Config.panelsTakeKeyboard || IslandState.launcher || IslandState.clipboard)
             ? WlrKeyboardFocus.Exclusive
             : WlrKeyboardFocus.None
 

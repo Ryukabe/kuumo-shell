@@ -8,7 +8,7 @@ import "../../state"
 // What the launcher shows for the typed text.
 // Normally: a calculator or conversion answer on top (when the text is one), then
 // suggestions for finishing a conversion, then the matching apps.
-// When the text starts with ">": the commands, filtered by what follows the ">".
+// In command mode (a ">" typed first): the commands, filtered by the typed text.
 // When a command is open (Enter on it): that command's own view.
 Singleton {
     id: root
@@ -16,17 +16,28 @@ Singleton {
     // What is typed in the search field
     property string query: ""
 
+    // Command mode: the list shows commands instead of apps. The view turns it on when
+    // a ">" is typed first (and takes the ">" out of the field), and off with Backspace on
+    // an empty field.
+    property bool commandMode: false
+
     // The command that is open, or null while none is
     property var activeCommand: null
 
     // The emoji picker shows its rows as a grid, everything else as a list
     readonly property bool gridView: root.activeCommand !== null && root.activeCommand.id === "emoji"
 
+    // The icon at the start of the search field and the hint of the empty field, for the
+    // mode the launcher is in
+    readonly property string fieldSymbol: root.activeCommand
+        ? root.activeCommand.icon
+        : root.commandMode ? "terminal" : "search"
+    readonly property string fieldHint: root.activeCommand
+        ? root.activeCommand.hint
+        : root.commandMode ? "Search commands" : "Search apps or type > for commands"
+
     // Asks the search field to take this text (a suggestion was picked)
     signal fillRequested(string text)
-
-    // ">" at the start switches the list from apps to commands
-    readonly property bool commandMode: root.query.startsWith(">")
 
     // The calculator or conversion answer for the typed text, or null
     readonly property var calc: Calc.evaluate(root.query, RatesService.rates, RatesService.fetchedAt)
@@ -40,18 +51,22 @@ Singleton {
     readonly property var results: root.activeCommand
         ? root.buildOpen(root.activeCommand, root.query)
         : root.commandMode
-            ? root.buildCommands(root.query.slice(1))
+            ? root.buildCommands(root.query)
             : root.build(root.query, root.calc, root.suggestions)
 
-    // Closing the launcher also closes the command that was open in it
+    // Closing the launcher also leaves command mode and closes the command that was open
     Connections {
         target: IslandState
         function onLauncherChanged() {
-            if (!IslandState.launcher) root.activeCommand = null
+            if (!IslandState.launcher) {
+                root.activeCommand = null
+                root.commandMode = false
+            }
         }
     }
 
     function closeCommand() { root.activeCommand = null }
+    function leaveCommands() { root.commandMode = false }
 
     // How well an app matches: lower is better, -1 is no match
     function score(entry, q) {
@@ -88,8 +103,8 @@ Singleton {
         return rows
     }
 
-    // The commands that match what follows the ">". A command that is not connected
-    // yet says so under its name.
+    // The commands that match the typed text. A command that is not connected yet says
+    // so under its name.
     function buildCommands(text) {
         return CommandService.search(text).map(c => ({
             kind: "command",
@@ -109,7 +124,8 @@ Singleton {
 
     // Enter or a click on a row.
     // A suggestion puts its conversion into the search box and keeps the launcher open.
-    // A command that acts at once runs and closes the island; any other command opens.
+    // A command that does its own thing (like opening the clipboard) runs and handles the
+    // island itself; any other command opens its view here.
     // An answer or an emoji is copied, an app is started, and then the island closes.
     // An answer with nothing to copy yet (rates still loading) does nothing, and neither
     // does a note.
@@ -119,8 +135,7 @@ Singleton {
             return
         }
         if (row.kind === "command") {
-            if (CommandService.run(row.command)) IslandState.closeAll()
-            else root.activeCommand = row.command
+            if (!CommandService.run(row.command)) root.activeCommand = row.command
             return
         }
         if (row.kind === "note") return

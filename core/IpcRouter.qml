@@ -17,6 +17,10 @@ Scope {
         function control(): void { IslandState.toggleControl() }
         // Open the launcher from anywhere, or close it again if it is open
         function launcher(): void { IslandState.toggleLauncher() }
+        // Open the clipboard history from anywhere, or close it again if it is open
+        function clipboard(): void { IslandState.toggleClipboard() }
+        // Open the power menu from anywhere, or close it again if it is open
+        function power(): void { IslandState.togglePower() }
         // Close every panel and cancel pending requests (what ESC does)
         function close(): void { IslandState.closeAll() }
     }

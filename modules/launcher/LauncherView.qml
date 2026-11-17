@@ -5,8 +5,9 @@ import "../../state"
 
 // The launcher island: a search field on top, the matching rows as a list below. A row
 // is an app, a calculator / conversion answer, a suggestion for finishing a conversion,
-// or (after a ">") a command. Enter on a command opens its view. The emoji picker shows
-// its emoji as a grid instead of a list, with the name of the emoji you are on under it.
+// or (in command mode) a command. Enter on a command opens its view. The emoji picker
+// shows its emoji as a grid instead of a list, with the name of the emoji you are on
+// under it.
 Item {
     id: root
 
@@ -42,15 +43,9 @@ Item {
             input.forceActiveFocus()
         }
 
-        // Opening a command clears the field for the command's own search. Closing it goes
-        // back to the command list. (When the whole launcher closes the field is cleared above.)
+        // Opening or closing a command starts its search empty
         function onActiveCommandChanged() {
-            if (LauncherService.activeCommand) {
-                input.text = ""
-            } else if (IslandState.launcher) {
-                input.text = ">"
-                input.cursorPosition = 1
-            }
+            input.text = ""
         }
     }
 
@@ -75,8 +70,9 @@ Item {
         }
     }
 
-    // The icon at the start of the search field: a magnifier, or the icon of the open command.
-    // It lines up with the icons of the rows below.
+    // The icon at the start of the search field: a magnifier for apps, a terminal in command
+    // mode, and the icon of the open command (the emoji face, ...). It lines up with the
+    // icons of the rows below.
     Text {
         id: fieldIcon
         x: root.layout.padX + root.layout.rowPad
@@ -85,10 +81,11 @@ Item {
         height: root.layout.searchH
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        text: LauncherService.activeCommand ? LauncherService.activeCommand.icon : "search"
-        color: LauncherService.activeCommand ? Theme.fg : Theme.fgMuted
+        text: LauncherService.fieldSymbol
+        color: LauncherService.commandMode ? Theme.fg : Theme.fgMuted
+        Behavior on color { ColorAnimation { duration: Motion.hoverFade } }
         font.family: Theme.fontIcon
-        font.pixelSize: root.layout.iconSize
+        font.pixelSize: Theme.fontSizeLg
     }
 
     // The search field, in line with the text of the rows
@@ -105,7 +102,17 @@ Item {
         clip: true
         selectByMouse: true
 
-        onTextChanged: LauncherService.query = text
+        onTextChanged: {
+            // A ">" typed first switches to the commands and is taken out of the field,
+            // so the field only shows what you are searching for
+            if (text.startsWith(">") && !LauncherService.commandMode && !LauncherService.activeCommand) {
+                LauncherService.commandMode = true
+                text = text.slice(1)
+                cursorPosition = text.length
+                return
+            }
+            LauncherService.query = text
+        }
 
         Keys.onUpPressed: root.move(0, -1)
         Keys.onDownPressed: root.move(0, 1)
@@ -126,10 +133,15 @@ Item {
             ? LauncherService.closeCommand()
             : IslandState.closeAll()
 
-        // Backspace in an empty field also goes back out of an open command
+        // Backspace in an empty field steps back: out of an open command to the command
+        // list, and out of the command list to the apps
         Keys.onPressed: event => {
-            if (event.key === Qt.Key_Backspace && input.text === "" && LauncherService.activeCommand) {
+            if (event.key !== Qt.Key_Backspace || input.text !== "") return
+            if (LauncherService.activeCommand) {
                 LauncherService.closeCommand()
+                event.accepted = true
+            } else if (LauncherService.commandMode) {
+                LauncherService.leaveCommands()
                 event.accepted = true
             }
         }
@@ -141,7 +153,7 @@ Item {
         y: input.y
         height: input.height
         verticalAlignment: Text.AlignVCenter
-        text: LauncherService.activeCommand ? LauncherService.activeCommand.hint : "Search apps or type > for commands"
+        text: LauncherService.fieldHint
         color: Theme.fgMuted
         font.family: Theme.fontText
         font.pixelSize: root.layout.fontSize
@@ -171,6 +183,7 @@ Item {
 
             // An app has its own icon; every other row has an icon-font symbol
             readonly property bool isApp: modelData.kind === "app"
+            readonly property bool current: index === list.currentIndex
 
             width: list.width
             height: root.layout.rowH
@@ -180,12 +193,14 @@ Item {
                 anchors.fill: parent
                 radius: Theme.radiusSmall
                 color: Theme.subBg
-                opacity: row.index === list.currentIndex ? 1 : 0
+                opacity: row.current ? 1 : 0
                 Behavior on opacity {
                     NumberAnimation { duration: Motion.hoverFade; easing.type: Easing.OutCubic }
                 }
             }
 
+            // The icon slot is as wide as an app icon so everything lines up; a symbol is
+            // drawn smaller inside it, muted, and bright on the highlighted row.
             // clip: a symbol name the icon font does not know shows as text, and must not spill out
             Item {
                 id: iconSlot
@@ -208,9 +223,10 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     text: row.isApp ? "" : row.modelData.symbol
-                    color: Theme.fgMuted
+                    color: row.current ? Theme.fg : Theme.fgMuted
+                    Behavior on color { ColorAnimation { duration: Motion.hoverFade } }
                     font.family: Theme.fontIcon
-                    font.pixelSize: root.layout.iconSize
+                    font.pixelSize: Theme.fontSizeLg
                 }
             }
 
