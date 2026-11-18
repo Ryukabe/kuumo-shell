@@ -3,6 +3,9 @@ import QtQuick
 QtObject {
     readonly property bool darkMode: true
 
+    // Wallpapers of this theme: file names inside styles/wallpaper/
+    readonly property var wallpapers: []
+
     readonly property color bg: "#0a0a0a"          // Void Night (main background)
     readonly property color subBg: "#131417"       // Moonlit Slate (island and surfaces)
     readonly property color elevatedBg: "#1b1d22"  // Cloud Shadow (pills, hover, popups)

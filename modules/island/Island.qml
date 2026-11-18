@@ -11,6 +11,7 @@ import "../media"
 import "../notifications"
 import "../osd"
 import "../power"
+import "../theme"
 import "../workspaces"
 
 Item {
@@ -108,6 +109,19 @@ Item {
             slots: 5, btnSize: 52, btnBorder: 1, btnGlowReach: 16, tileIconSize: 24, labelGap: 6,
             holdRingW: 3
         },
+        // The theme switcher: search row on top, a thin line, a row of theme cards, and the
+        // count under it. The size is fixed: h = padTop + searchH + listGap + rowH + footerH +
+        // padBottom. A card is cardW x cardH and grows by selectedScale when highlighted, so
+        // rowH must fit the grown card. The dots and the name sit on a shade shadeH tall along
+        // the card's bottom edge; appliedDot marks the saved theme.
+        theme: {
+            w: 520, h: 176, clockSize: 12, padX: 16, padTop: 12, padBottom: 8,
+            searchH: 32, fontSize: 15, listGap: 8, dividerGap: 4, dividerH: 1,
+            rowH: 92, footerH: 24,
+            cardW: 112, cardH: 70, cardGap: 20, cardRadius: 10, cardBorder: 1, selectedScale: 1.25,
+            cardPad: 8, cardTextGap: 4, shadeH: 44, dotSize: 6, dotGap: 4,
+            appliedDot: 6, appliedInset: 8
+        },
         // Volume / brightness: icon on the left, bar with a moon at the end of its fill
         osd: {
             w: 240, h: 44, clockSize: 12, padX: 16,
@@ -152,8 +166,11 @@ Item {
         clockSize: layouts.clipboard.clockSize
     })
 
-    // The power menu has a fixed size, so layouts.power is used as it is (the "power"
-    // mode name finds it in the last step below).
+    // Reading ThemeService here starts it when the shell starts, so the saved theme is restored
+    readonly property bool themeServiceStarted: ThemeService.started
+
+    // The power menu and the theme switcher have fixed sizes, so layouts.power and
+    // layouts.theme are used as they are (the mode name finds them in the last step below).
     readonly property var cur: IslandState.osdActive
         ? layouts.osd
         : toastVisible
@@ -170,11 +187,11 @@ Item {
 
     function clamp01(v) { return Math.max(0, Math.min(1, v)) }
 
-    // The clock fades out during an OSD, a toast, the launcher, the clipboard or the power
-    // menu, and on the control center's other pages (Wi-Fi list, Night Light, KDE Connect,
-    // notifications); it only shows on the main page
+    // The clock fades out during an OSD, a toast, the launcher, the clipboard, the power menu
+    // or the theme switcher, and on the control center's other pages (Wi-Fi list, Night
+    // Light, KDE Connect, notifications); it only shows on the main page
     readonly property bool clockHidden: IslandState.osdActive || toastVisible
-        || IslandState.launcher || IslandState.clipboard || IslandState.power
+        || IslandState.launcher || IslandState.clipboard || IslandState.power || IslandState.theme
         || (IslandState.control && controlView.page !== "main")
 
     // Height of the clock + date block when extended, used to center it vertically
@@ -347,12 +364,28 @@ Item {
     }
     readonly property real powerReveal: powerRevealed * powerShown
 
+    // The theme switcher content appears the same way, measured by width
+    readonly property real themeGrowth: clamp01(
+        (sw.value - layouts.idle.w) / (layouts.theme.w - layouts.idle.w))
+    readonly property real themeRevealed: clamp01(
+        (themeGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
+
+    // Leaving the theme switcher (closing or an OSD) hides it fast
+    property real themeShown: IslandState.theme && !IslandState.osdActive ? 1 : 0
+    Behavior on themeShown {
+        NumberAnimation {
+            duration: root.themeShown > 0 || IslandState.osdActive || !IslandState.theme ? Motion.fadeOut : 0
+            easing.type: Easing.OutCubic
+        }
+    }
+    readonly property real themeReveal: themeRevealed * themeShown
+
     // ── Opening and closing by hover ──
     // Hovering the island opens the extended panel after a short delay; leaving it closes
     // the panel after a slightly longer one. Only the extended panel closes this way: the
-    // control center, the launcher, the clipboard and the power menu stay until you click
-    // outside or press ESC. While a toast shows, hovering keeps the toast instead of
-    // opening the panel.
+    // control center, the launcher, the clipboard, the power menu and the theme switcher stay
+    // until you click outside or press ESC. While a toast shows, hovering keeps the toast
+    // instead of opening the panel.
     Timer {
         id: openTimer
         interval: Root.Config.islandHoverOpenMs
@@ -442,8 +475,8 @@ Item {
         }
 
         // The one shared clock: it moves and scales, it is never swapped. It fades out
-        // during an OSD, a toast, the launcher, the clipboard or the power menu, and on
-        // the control center's other pages.
+        // during an OSD, a toast, the launcher, the clipboard, the power menu or the theme
+        // switcher, and on the control center's other pages.
         NumberFlow {
             id: clock
             weight: Font.Bold
@@ -561,6 +594,16 @@ Item {
             y: 0
             width: root.layouts.power.w
             height: root.layouts.power.h
+        }
+
+        // Theme switcher: search pill and a row of theme cards, as tall as the island
+        ThemeView {
+            layout: root.layouts.theme
+            reveal: root.themeReveal
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 0
+            width: root.layouts.theme.w
+            height: root.layouts.theme.h
         }
 
         // A notification, centered in the pill

@@ -6,6 +6,9 @@ Singleton {
     property string theme: "kuumo-dark"
     property string wallpaper: ""
 
+    // Folder of the wallpapers, shared by every theme (each preset lists its own files)
+    readonly property string wallpaperDir: Quickshell.shellDir + "/styles/wallpapers/"
+
     // Soft moonlight halo behind the island
     property bool islandHalo: true
 
@@ -53,4 +56,11 @@ Singleton {
 
     // Notifications: how long a toast stays on the island (ms)
     property int notificationToastMs: 5000
+
+    // Switchers (theme, wallpaper): moving over a card previews it once you rest on it
+    // this long (ms), so fast scrolling does not apply every card on the way
+    property int switcherPreviewDelayMs: 150
+
+    // Typewriter animation: placeholders type themselves out and typed characters settle in
+    property bool typewriter: true
 }

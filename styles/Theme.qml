@@ -7,9 +7,12 @@ import ".." as Root
 Singleton {
     id: root
 
-    // ── Presets (one instance each; add new presets here) ──
+    // ── Presets (one instance each; add new presets here and in presetIds) ──
     readonly property QtObject _kuumoDark: KuumoDark {}
-    readonly property var presetMap: ({ "kuumo-dark": _kuumoDark })
+    readonly property QtObject _everblush: Everblush {}
+    readonly property var presetMap: ({ "kuumo-dark": _kuumoDark, "everblush": _everblush })
+    // The order the theme switcher lists them in
+    readonly property var presetIds: ["kuumo-dark", "everblush"]
 
     // ── Single source of truth: the active preset ──
     readonly property var active: presetMap[Root.Config.theme] ?? _kuumoDark
@@ -71,4 +74,8 @@ Singleton {
     readonly property int fontSizeSm: 12
     readonly property int fontSizeMd: 14
     readonly property int fontSizeLg: 18
+
+    // ── Text fields ──
+    // Width of the blinking cursor
+    readonly property int caretWidth: 1
 }

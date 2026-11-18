@@ -52,4 +52,18 @@ Singleton {
     // drains back when you let go early
     readonly property int holdMs: 900
     readonly property int holdReleaseMs: 180
+
+    // Switchers (theme, wallpaper): the highlighted card grows with a spring, and the row
+    // of cards slides to it (milliseconds)
+    readonly property var cardGrow: ({ response: 0.34, damping: 0.85 })
+    readonly property int carouselMs: 280
+
+    // Search pill of the switchers: grows into a field and shrinks back to a button
+    readonly property var searchPill: ({ response: 0.38, damping: 0.9 })
+
+    // Typewriter: time per character of a typed-out placeholder (ms), and how a character
+    // you type settles in: fade time (ms) and how far it rises (pixels)
+    readonly property int typeMs: 32
+    readonly property int typedCharMs: 140
+    readonly property int typedCharRise: 4
 }

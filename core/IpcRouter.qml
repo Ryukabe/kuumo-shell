@@ -21,6 +21,8 @@ Scope {
         function clipboard(): void { IslandState.toggleClipboard() }
         // Open the power menu from anywhere, or close it again if it is open
         function power(): void { IslandState.togglePower() }
+        // Open the theme switcher from anywhere, or close it again if it is open
+        function theme(): void { IslandState.toggleTheme() }
         // Close every panel and cancel pending requests (what ESC does)
         function close(): void { IslandState.closeAll() }
     }

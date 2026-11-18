@@ -1,6 +1,8 @@
 IslandPill 1.0 IslandPill.qml
-Spring 1.0 Spring.qml
-NumberFlow 1.0 NumberFlow.qml
-GlowDivider 1.0 GlowDivider.qml
-SlideText 1.0 SlideText.qml
 IconSwap 1.0 IconSwap.qml
+GlowDivider 1.0 GlowDivider.qml
+NumberFlow 1.0 NumberFlow.qml
+SearchPill 1.0 SearchPill.qml
+Spring 1.0 Spring.qml
+SlideText 1.0 SlideText.qml
+TypeField 1.0 TypeField.qml
