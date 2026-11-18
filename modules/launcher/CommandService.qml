@@ -11,7 +11,7 @@ Singleton {
     // row and in the search field, hint the text of the empty search field while the
     // command is open, words are extra search words. ready: false means nothing runs yet.
     readonly property var commands: [
-        { id: "wallpaper", name: "Wallpaper switcher", sub: "Pick a wallpaper", icon: "wallpaper", hint: "Search wallpapers", words: "background image", ready: false },
+        { id: "wallpaper", name: "Wallpaper switcher", sub: "Pick a wallpaper", icon: "wallpaper", hint: "Search wallpapers", words: "background image", ready: true },
         { id: "theme", name: "Theme switcher", sub: "Change colors and theme", icon: "palette", hint: "Search themes", words: "colors appearance dark light", ready: true },
         { id: "settings", name: "Settings", sub: "Open the settings app", icon: "settings", hint: "Search settings", words: "preferences options config", ready: false },
         { id: "emoji", name: "Emoji picker", sub: "Find and copy an emoji", icon: "emoji_emotions", hint: "Search emoji", words: "emoticon smiley", ready: true },
@@ -55,6 +55,10 @@ Singleton {
         }
         if (cmd.id === "theme") {
             IslandState.openTheme()
+            return true
+        }
+        if (cmd.id === "wallpaper") {
+            IslandState.openWallpaper()
             return true
         }
         // Each other instant command is connected here by its id, for example:

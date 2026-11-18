@@ -23,6 +23,8 @@ Scope {
         function power(): void { IslandState.togglePower() }
         // Open the theme switcher from anywhere, or close it again if it is open
         function theme(): void { IslandState.toggleTheme() }
+        // Open the wallpaper switcher from anywhere, or close it again if it is open
+        function wallpaper(): void { IslandState.toggleWallpaper() }
         // Close every panel and cancel pending requests (what ESC does)
         function close(): void { IslandState.closeAll() }
     }

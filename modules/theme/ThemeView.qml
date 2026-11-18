@@ -6,11 +6,12 @@ import "../../components"
 import "../../styles"
 import "../../state"
 
-// The theme switcher island: a search pill and the name of the showing theme on top, a row of
-// theme cards below (the highlighted one bigger), and the count under it. Resting on a card
+// The theme switcher island. Top row: the island's clock and the name of the showing theme on
+// the left, the search pill in the right corner (it pulls out to the left). Below it a row of
+// theme cards (the highlighted one bigger), and the count under that. Resting on a card
 // previews that theme (Config.switcherPreviewDelayMs). Enter or a click keeps it. Esc, a click
-// outside or closing the island puts the saved theme back. Left and right (or the pointer)
-// move the highlight; typing opens the search, and while it is open up and down move it.
+// outside or closing the island puts the saved theme back. Left and right (or the pointer) move
+// the highlight; typing opens the search, and while it is open up and down move it.
 Item {
     id: root
 
@@ -93,13 +94,30 @@ Item {
         }
     }
 
-    // ── Top row: the search pill, and the name of the theme that is showing ──
+    // ── Top row ──
+    // The island's own clock sits at the far left (Island.qml moves it there); the theme's name
+    // follows it, and stops short of the search pill
+    Text {
+        x: root.layout.padX + root.layout.clockSlotW
+        y: root.layout.padTop
+        width: Math.max(0, search.x - root.layout.gap - x)
+        height: root.layout.searchH
+        verticalAlignment: Text.AlignVCenter
+        elide: Text.ElideRight
+        text: Theme.active.name
+        color: Theme.fgMuted
+        font.family: Theme.fontText
+        font.pixelSize: Theme.fontSizeSm
+    }
+
+    // The search pill in the right corner
     SearchPill {
         id: search
-        x: root.layout.padX
+        anchors.right: parent.right
+        anchors.rightMargin: root.layout.padX
         y: root.layout.padTop
         pillHeight: root.layout.searchH
-        expandedWidth: root.width - 2 * root.layout.padX
+        expandedWidth: root.layout.searchExpandedW
         pixelSize: root.layout.fontSize
         placeholder: "Search themes..."
 
@@ -108,35 +126,8 @@ Item {
         onCollapsed: keys.forceActiveFocus()
     }
 
-    Text {
-        anchors.right: parent.right
-        anchors.rightMargin: root.layout.padX
-        y: root.layout.padTop
-        height: root.layout.searchH
-        verticalAlignment: Text.AlignVCenter
-        text: Theme.active.name
-        color: Theme.fgMuted
-        font.family: Theme.fontText
-        font.pixelSize: Theme.fontSizeSm
-        opacity: search.expanded ? 0 : 1
-        Behavior on opacity {
-            NumberAnimation {
-                duration: search.expanded ? Motion.fadeOut : Motion.fadeIn
-                easing.type: Easing.OutCubic
-            }
-        }
-    }
-
-    // The thin line under the top row
-    Rectangle {
-        x: root.layout.padX
-        y: root.layout.padTop + root.layout.searchH + root.layout.dividerGap
-        width: root.width - 2 * root.layout.padX
-        height: root.layout.dividerH
-        color: Theme.border
-    }
-
     // ── The cards: a row that slides so the highlighted card stays in the middle ──
+    // The row is taller than the grown card, so its clip never touches a card
     ListView {
         id: list
         x: 0

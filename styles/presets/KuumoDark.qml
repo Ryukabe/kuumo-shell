@@ -1,10 +1,11 @@
 import QtQuick
 
 QtObject {
+    readonly property string name: "Kuumo Dark"
     readonly property bool darkMode: true
 
     // Wallpapers of this theme: file names inside styles/wallpaper/
-    readonly property var wallpapers: []
+    readonly property var wallpapers: ["train in ocean.jpg"]
 
     readonly property color bg: "#0a0a0a"          // Void Night (main background)
     readonly property color subBg: "#131417"       // Moonlit Slate (island and surfaces)

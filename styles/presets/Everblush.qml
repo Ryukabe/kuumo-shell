@@ -1,14 +1,11 @@
 import QtQuick
 
-// Everblush: a dark, vibrant theme. bg, subBg, fg, fgMuted and the six colors are from the
-// official palette (github.com/Everblush). elevatedBg and border are neighbouring shades from
-// its Doom Emacs port, and accent is a choice (the palette has none).
 QtObject {
     readonly property string name: "Everblush"
     readonly property bool darkMode: true
 
     // Wallpapers of this theme: file names inside styles/wallpaper/
-    readonly property var wallpapers: []
+    readonly property var wallpapers: ["anime blue cozy room.png"]
 
     readonly property color bg: "#141b1e"          // Background
     readonly property color subBg: "#232a2d"       // Lighter Background

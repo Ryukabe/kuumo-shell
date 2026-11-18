@@ -8,9 +8,10 @@ import "../../styles"
 import "../../state"
 
 // One theme in the switcher: its wallpaper (its own colors when it has none), the six colors
-// of its palette as dots, and its name, which shows only while the pointer is on the card. A
-// shade along the bottom edge keeps the dots and the name readable on any picture. The
-// highlighted card grows with a spring and gets a ring; a small dot marks the saved theme.
+// of its palette as dots, and its name, which shows while the card is highlighted (by the
+// pointer or the keyboard). A shade along the bottom edge keeps the dots and the name readable
+// on any picture. The highlighted card grows with a spring and gets a ring; a small dot marks
+// the saved theme.
 Item {
     id: root
 
@@ -54,12 +55,14 @@ Item {
     }
     Component.onCompleted: grow.snap()
 
-    // The card grows around its centre; the row of cards reserves only the resting size
+    // The card grows around its centre; the row of cards reserves only the resting size.
+    // Size and position are whole pixels, so the ring is never cut or blurred on a half pixel.
     ClippingRectangle {
         id: frame
-        anchors.centerIn: parent
-        width: root.width * grow.value
-        height: root.height * grow.value
+        width: Math.round(root.width * grow.value)
+        height: Math.round(root.height * grow.value)
+        x: Math.round((root.width - width) / 2)
+        y: Math.round((root.height - height) / 2)
         radius: root.layout.cardRadius
         color: root.entry.preset.bg
         border.width: root.layout.cardBorder
@@ -96,7 +99,7 @@ Item {
             }
         }
 
-        // The name (hover only) over the palette dots, at the bottom left
+        // The name (while highlighted) over the palette dots, at the bottom left
         Column {
             anchors.left: parent.left
             anchors.bottom: parent.bottom
@@ -112,7 +115,7 @@ Item {
                 font.pixelSize: Theme.fontSizeSm
                 font.bold: true
                 elide: Text.ElideRight
-                opacity: pointer.containsMouse ? 1 : 0
+                opacity: root.current || pointer.containsMouse ? 1 : 0
                 Behavior on opacity {
                     NumberAnimation { duration: Motion.hoverFade; easing.type: Easing.OutCubic }
                 }

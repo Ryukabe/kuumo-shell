@@ -12,6 +12,7 @@ import "../notifications"
 import "../osd"
 import "../power"
 import "../theme"
+import "../wallpaper"
 import "../workspaces"
 
 Item {
@@ -109,18 +110,36 @@ Item {
             slots: 5, btnSize: 52, btnBorder: 1, btnGlowReach: 16, tileIconSize: 24, labelGap: 6,
             holdRingW: 3
         },
-        // The theme switcher: search row on top, a thin line, a row of theme cards, and the
-        // count under it. The size is fixed: h = padTop + searchH + listGap + rowH + footerH +
-        // padBottom. A card is cardW x cardH and grows by selectedScale when highlighted, so
-        // rowH must fit the grown card. The dots and the name sit on a shade shadeH tall along
-        // the card's bottom edge; appliedDot marks the saved theme.
+        // The theme switcher: a top row, a row of theme cards, and the count under it. The size
+        // is fixed: h = padTop + searchH + listGap + rowH + footerH + padBottom.
+        //  - Top row: the island's clock at the far left (clockCenterY = padTop + searchH / 2 is
+        //    where its middle sits, clockSlotW the room kept for it), then the theme name, and in
+        //    the right corner the search pill: searchH wide closed, searchExpandedW open, pulling
+        //    out to the left. gap is the space between the items of the row.
+        //  - Cards: cardW x cardH, growing by selectedScale when highlighted (keep both whole
+        //    pixels). rowH = the grown card plus 8 above and below it, so the row's clip never
+        //    touches a card. The dots and the name sit on a shade shadeH tall along the card's
+        //    bottom edge; appliedDot marks the saved theme.
         theme: {
-            w: 520, h: 176, clockSize: 12, padX: 16, padTop: 12, padBottom: 8,
-            searchH: 32, fontSize: 15, listGap: 8, dividerGap: 4, dividerH: 1,
-            rowH: 92, footerH: 24,
-            cardW: 112, cardH: 70, cardGap: 20, cardRadius: 10, cardBorder: 1, selectedScale: 1.25,
-            cardPad: 8, cardTextGap: 4, shadeH: 44, dotSize: 6, dotGap: 4,
-            appliedDot: 6, appliedInset: 8
+            w: 600, h: 200, clockSize: 12, padX: 16, padTop: 12, padBottom: 8,
+            clockCenterY: 28, clockSlotW: 44, gap: 10,
+            searchH: 32, searchExpandedW: 220, fontSize: 15, listGap: 8,
+            rowH: 116, footerH: 24,
+            cardW: 128, cardH: 80, cardGap: 24, cardRadius: 12, cardBorder: 1, selectedScale: 1.25,
+            cardPad: 10, cardTextGap: 5, shadeH: 52, dotSize: 7, dotGap: 5,
+            appliedDot: 7, appliedInset: 10
+        },
+        // The wallpaper switcher: the same island as the theme switcher (see there), plus the
+        // Static / Animated switch between the theme name and the pill: toggleW x toggleH, its
+        // highlight toggleInset inside it. The cards show only their name (no dots).
+        wallpaper: {
+            w: 600, h: 200, clockSize: 12, padX: 16, padTop: 12, padBottom: 8,
+            clockCenterY: 28, clockSlotW: 44, gap: 10,
+            searchH: 32, searchExpandedW: 220, fontSize: 15, listGap: 8,
+            rowH: 116, footerH: 24,
+            cardW: 128, cardH: 80, cardGap: 24, cardRadius: 12, cardBorder: 1, selectedScale: 1.25,
+            cardPad: 10, shadeH: 52, appliedDot: 7, appliedInset: 10,
+            toggleW: 148, toggleH: 26, toggleInset: 3
         },
         // Volume / brightness: icon on the left, bar with a moon at the end of its fill
         osd: {
@@ -166,11 +185,13 @@ Item {
         clockSize: layouts.clipboard.clockSize
     })
 
-    // Reading ThemeService here starts it when the shell starts, so the saved theme is restored
+    // Reading the theme and wallpaper services here starts them when the shell starts, so the
+    // saved theme and wallpaper are restored at startup
     readonly property bool themeServiceStarted: ThemeService.started
+    readonly property bool wallpaperServiceStarted: WallpaperService.started
 
-    // The power menu and the theme switcher have fixed sizes, so layouts.power and
-    // layouts.theme are used as they are (the mode name finds them in the last step below).
+    // The power menu and the two switchers have fixed sizes, so layouts.power, layouts.theme
+    // and layouts.wallpaper are used as they are (the mode name finds them in the last step below).
     readonly property var cur: IslandState.osdActive
         ? layouts.osd
         : toastVisible
@@ -185,13 +206,18 @@ Item {
     readonly property real extClockScale: layouts.extended.clockSize / fullClockSize
     readonly property real ctlClockScale: layouts.control.clockSize / fullClockSize
 
+    // In a switcher the clock sits at the top left, like in the control center
+    readonly property bool inSwitcher: IslandState.theme || IslandState.wallpaper
+    readonly property var switcherLayout: IslandState.wallpaper ? layouts.wallpaper : layouts.theme
+    readonly property real swClockScale: switcherLayout.clockSize / fullClockSize
+
     function clamp01(v) { return Math.max(0, Math.min(1, v)) }
 
-    // The clock fades out during an OSD, a toast, the launcher, the clipboard, the power menu
-    // or the theme switcher, and on the control center's other pages (Wi-Fi list, Night
-    // Light, KDE Connect, notifications); it only shows on the main page
+    // The clock fades out during an OSD, a toast, the launcher, the clipboard and the power
+    // menu, and on the control center's other pages (Wi-Fi list, Night Light, KDE Connect,
+    // notifications); it shows on the control center's main page and in the two switchers
     readonly property bool clockHidden: IslandState.osdActive || toastVisible
-        || IslandState.launcher || IslandState.clipboard || IslandState.power || IslandState.theme
+        || IslandState.launcher || IslandState.clipboard || IslandState.power
         || (IslandState.control && controlView.page !== "main")
 
     // Height of the clock + date block when extended, used to center it vertically
@@ -205,12 +231,16 @@ Item {
         ? layouts.extended.padX
         : IslandState.control
             ? layouts.control.padX
-            : (layouts.idle.w - clock.implicitWidth * idleScale) / 2
+            : inSwitcher
+                ? switcherLayout.padX
+                : (layouts.idle.w - clock.implicitWidth * idleScale) / 2
     readonly property real clockY: IslandState.extended
         ? (layouts.extended.h - clockBlockH) / 2
         : IslandState.control
             ? layouts.control.clockCenterY - clock.implicitHeight * ctlClockScale / 2
-            : (layouts.idle.h - clock.implicitHeight * idleScale) / 2
+            : inSwitcher
+                ? switcherLayout.clockCenterY - clock.implicitHeight * swClockScale / 2
+                : (layouts.idle.h - clock.implicitHeight * idleScale) / 2
 
     // The area you tap: around the clock and date when extended (opens the control
     // center), around the small clock when in the control center (goes back)
@@ -380,10 +410,26 @@ Item {
     }
     readonly property real themeReveal: themeRevealed * themeShown
 
+    // The wallpaper switcher content appears the same way, measured by width
+    readonly property real wallpaperGrowth: clamp01(
+        (sw.value - layouts.idle.w) / (layouts.wallpaper.w - layouts.idle.w))
+    readonly property real wallpaperRevealed: clamp01(
+        (wallpaperGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
+
+    // Leaving the wallpaper switcher (closing or an OSD) hides it fast
+    property real wallpaperShown: IslandState.wallpaper && !IslandState.osdActive ? 1 : 0
+    Behavior on wallpaperShown {
+        NumberAnimation {
+            duration: root.wallpaperShown > 0 || IslandState.osdActive || !IslandState.wallpaper ? Motion.fadeOut : 0
+            easing.type: Easing.OutCubic
+        }
+    }
+    readonly property real wallpaperReveal: wallpaperRevealed * wallpaperShown
+
     // ── Opening and closing by hover ──
     // Hovering the island opens the extended panel after a short delay; leaving it closes
     // the panel after a slightly longer one. Only the extended panel closes this way: the
-    // control center, the launcher, the clipboard, the power menu and the theme switcher stay
+    // control center, the launcher, the clipboard, the power menu and the switchers stay
     // until you click outside or press ESC. While a toast shows, hovering keeps the toast
     // instead of opening the panel.
     Timer {
@@ -475,8 +521,8 @@ Item {
         }
 
         // The one shared clock: it moves and scales, it is never swapped. It fades out
-        // during an OSD, a toast, the launcher, the clipboard, the power menu or the theme
-        // switcher, and on the control center's other pages.
+        // during an OSD, a toast, the launcher, the clipboard and the power menu, and on the
+        // control center's other pages. In the two switchers it sits at the top left.
         NumberFlow {
             id: clock
             weight: Font.Bold
@@ -596,7 +642,8 @@ Item {
             height: root.layouts.power.h
         }
 
-        // Theme switcher: search pill and a row of theme cards, as tall as the island
+        // Theme switcher: the name and search pill on top, a row of theme cards, as tall as
+        // the island (the clock above it is the shared one)
         ThemeView {
             layout: root.layouts.theme
             reveal: root.themeReveal
@@ -604,6 +651,17 @@ Item {
             y: 0
             width: root.layouts.theme.w
             height: root.layouts.theme.h
+        }
+
+        // Wallpaper switcher: the name, Static / Animated switch and search pill on top, a row
+        // of wallpaper cards, as tall as the island
+        WallpaperView {
+            layout: root.layouts.wallpaper
+            reveal: root.wallpaperReveal
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 0
+            width: root.layouts.wallpaper.w
+            height: root.layouts.wallpaper.h
         }
 
         // A notification, centered in the pill

@@ -61,6 +61,11 @@ Singleton {
     // Search pill of the switchers: grows into a field and shrinks back to a button
     readonly property var searchPill: ({ response: 0.38, damping: 0.9 })
 
+    // The Static / Animated switch: its highlight is stretched like rubber. The edge it moves
+    // toward is quick and bouncy, the other edge follows slowly.
+    readonly property var rubberLead: ({ response: 0.16, damping: 0.62 })
+    readonly property var rubberTrail: ({ response: 0.38, damping: 0.9 })
+
     // Typewriter: time per character of a typed-out placeholder (ms), and how a character
     // you type settles in: fade time (ms) and how far it rises (pixels)
     readonly property int typeMs: 32

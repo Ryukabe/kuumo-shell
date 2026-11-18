@@ -2,7 +2,7 @@ pragma Singleton
 import Quickshell
 
 Singleton {
-    // "idle" | "extended" | "control" | "launcher" | "clipboard" | "power" | "theme"
+    // "idle" | "extended" | "control" | "launcher" | "clipboard" | "power" | "theme" | "wallpaper"
     property string mode: "idle"
     readonly property bool extended: mode === "extended"
     readonly property bool control: mode === "control"
@@ -10,6 +10,7 @@ Singleton {
     readonly property bool clipboard: mode === "clipboard"
     readonly property bool power: mode === "power"
     readonly property bool theme: mode === "theme"
+    readonly property bool wallpaper: mode === "wallpaper"
     // Any panel open, i.e. the island is not at rest. The OSD does not count: it
     // never takes the keyboard or the screen.
     readonly property bool open: mode !== "idle"
@@ -22,7 +23,7 @@ Singleton {
     function backToExtended() { mode = "extended" }
     function toggleControl() { control ? collapse() : openControl() }
 
-    // The launcher, the clipboard, the power menu and the theme switcher open from any
+    // The launcher, the clipboard, the power menu and the two switchers open from any
     // mode and close back to rest
     function openLauncher() { mode = "launcher" }
     function toggleLauncher() { launcher ? collapse() : openLauncher() }
@@ -35,6 +36,9 @@ Singleton {
 
     function openTheme() { mode = "theme" }
     function toggleTheme() { theme ? collapse() : openTheme() }
+
+    function openWallpaper() { mode = "wallpaper" }
+    function toggleWallpaper() { wallpaper ? collapse() : openWallpaper() }
 
     // The OSD (volume, brightness) borrows the island for a moment on top of whatever
     // mode it is in, then gives it back.

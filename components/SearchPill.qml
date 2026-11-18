@@ -2,10 +2,11 @@ import QtQuick
 import "../styles"
 import "../state"
 
-// A search field that rests as a small magnifier button and grows into a text field (and shrinks
-// back) with a spring. Click the magnifier, or call expand(), to open it; collapse() closes it
-// and clears the text. The placeholder types itself out when it opens. Shared by the theme
-// and wallpaper switchers.
+// A search field that rests as a small magnifier button in a corner and pulls out sideways
+// into a text field (and shrinks back) with a spring. The caller anchors its right edge, so it
+// grows to the left while the magnifier stays at the right end. Click the magnifier, or call
+// expand(), to open it; collapse() closes it and clears the text. The placeholder types itself
+// out when it opens. Shared by the theme and wallpaper switchers.
 Item {
     id: root
 
@@ -62,30 +63,11 @@ Item {
         color: Theme.subBg
     }
 
-    // The magnifier: a button while closed, the start of the field while open
-    Text {
-        width: root.pillHeight
-        height: root.pillHeight
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        text: "search"
-        color: root.expanded ? Theme.fg : Theme.fgMuted
-        Behavior on color { ColorAnimation { duration: Motion.hoverFade } }
-        font.family: Theme.fontIcon
-        font.pixelSize: Theme.fontSizeLg
-    }
-
-    MouseArea {
-        width: root.pillHeight
-        height: root.pillHeight
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.expanded ? root.collapse() : root.expand()
-    }
-
+    // The field fills the pill to the left of the magnifier
     TypeField {
         id: field
-        x: root.pillHeight
-        width: root.width - x - Theme.spacingMd
+        x: Theme.spacingMd
+        width: Math.max(0, root.width - root.pillHeight - Theme.spacingMd)
         height: root.pillHeight
         placeholder: root.placeholder
         pixelSize: root.pixelSize
@@ -100,5 +82,27 @@ Item {
         }
 
         onKeyPressed: event => root.keyPressed(event)
+    }
+
+    // The magnifier: a button while closed, the end of the field while open. It stays at the right end.
+    Text {
+        x: root.width - root.pillHeight
+        width: root.pillHeight
+        height: root.pillHeight
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        text: "search"
+        color: root.expanded ? Theme.fg : Theme.fgMuted
+        Behavior on color { ColorAnimation { duration: Motion.hoverFade } }
+        font.family: Theme.fontIcon
+        font.pixelSize: Theme.fontSizeLg
+    }
+
+    MouseArea {
+        x: root.width - root.pillHeight
+        width: root.pillHeight
+        height: root.pillHeight
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.expanded ? root.collapse() : root.expand()
     }
 }

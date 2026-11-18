@@ -4,6 +4,8 @@ import Quickshell
 Singleton {
     // Name of the active preset (must match a key in Theme.presetMap)
     property string theme: "kuumo-dark"
+    // File name (inside wallpaperDir) of the wallpaper on screen right now. Set by
+    // WallpaperService; the wallpaper kept for each theme is saved by that service.
     property string wallpaper: ""
 
     // Folder of the wallpapers, shared by every theme (each preset lists its own files)
@@ -60,6 +62,17 @@ Singleton {
     // Switchers (theme, wallpaper): moving over a card previews it once you rest on it
     // this long (ms), so fast scrolling does not apply every card on the way
     property int switcherPreviewDelayMs: 150
+
+    // Wallpaper changes by awww (types: see `awww img --help`). A wallpaper you keep uses
+    // wallpaperTransition; previews, theme changes in the theme switcher and the wallpaper
+    // restored at startup use wallpaperPreviewTransition ("none" finishes instantly).
+    // The duration is in seconds and does not apply to "simple".
+    property string wallpaperTransition: "fade"
+    property string wallpaperPreviewTransition: "none"
+    property real wallpaperTransitionSeconds: 0.8
+    property int wallpaperTransitionFps: 60
+    // Width (px) of the still thumbnails made from animated wallpapers
+    property int wallpaperThumbWidth: 320
 
     // Typewriter animation: placeholders type themselves out and typed characters settle in
     property bool typewriter: true
