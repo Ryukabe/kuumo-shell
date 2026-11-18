@@ -10,9 +10,24 @@ Singleton {
     // ── Presets (one instance each; add new presets here and in presetIds) ──
     readonly property QtObject _kuumoDark: KuumoDark {}
     readonly property QtObject _everblush: Everblush {}
-    readonly property var presetMap: ({ "kuumo-dark": _kuumoDark, "everblush": _everblush })
+    readonly property QtObject _tokyoNight: TokyoNight {}
+    readonly property QtObject _rosePine: RosePine {}
+    readonly property QtObject _ayu: Ayu {}
+    readonly property var presetMap: ({
+        "kuumo-dark": _kuumoDark,
+        "everblush": _everblush,
+        "tokyo-night": _tokyoNight,
+        "rose-pine": _rosePine,
+        "ayu-dark": _ayu
+    })
     // The order the theme switcher lists them in
-    readonly property var presetIds: ["kuumo-dark", "everblush"]
+    readonly property var presetIds: [
+        "kuumo-dark",
+        "everblush",
+        "tokyo-night",
+        "rose-pine",
+        "ayu-dark"
+    ]
 
     // ── Single source of truth: the active preset ──
     readonly property var active: presetMap[Root.Config.theme] ?? _kuumoDark

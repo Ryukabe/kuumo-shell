@@ -5,7 +5,7 @@ QtObject {
     readonly property bool darkMode: true
 
     // Wallpapers of this theme: file names inside styles/wallpaper/
-    readonly property var wallpapers: ["anime blue cozy room.png"]
+    readonly property var wallpapers: []
 
     readonly property color bg: "#141b1e"          // Background
     readonly property color subBg: "#232a2d"       // Lighter Background
