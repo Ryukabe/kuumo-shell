@@ -66,9 +66,38 @@ Singleton {
     readonly property var rubberLead: ({ response: 0.16, damping: 0.62 })
     readonly property var rubberTrail: ({ response: 0.38, damping: 0.9 })
 
-    // Typewriter: time per character of a typed-out placeholder (ms), and how a character
-    // you type settles in: fade time (ms) and how far it rises (pixels)
+    // The old typewriter field (TypeField): goes when the new text effects replace it
     readonly property int typeMs: 32
     readonly property int typedCharMs: 140
     readonly property int typedCharRise: 4
+
+    // ── Text effects (components/TypingText, BackspaceText, IrisText, ClockText,
+    //    PasswordText, CopyText) ──
+    // Typing: the average time per typed character, how uneven the keystrokes are (0 = even,
+    // 1 = very uneven), the time per deleted character, and how long a typed line stays before
+    // it is deleted (ms)
+    readonly property int typingSpeed: 60
+    readonly property real typingJitter: 0.5
+    readonly property int typingDeleteSpeed: 30
+    readonly property int typingPause: 1800
+    // Backspace: the time per deleted character (ms)
+    readonly property int backspaceSpeed: 40
+    // The typing caret: one full blink while the typing waits (ms)
+    readonly property int caretBlinkMs: 1000
+    // Iris: one character opening, the time between characters, and between words (ms)
+    readonly property int irisMs: 600
+    readonly property int irisStagger: 60
+    readonly property int irisWordStagger: 180
+    // Clock: a digit rising into its window, one pulse of the separators (ms), and how dim a
+    // separator gets at the bottom of a pulse (0..1)
+    readonly property int clockDigitMs: 400
+    readonly property int clockPulseMs: 1000
+    readonly property real clockPulseDim: 0.35
+    // Password: the time between one character turning from a dot into its letter and the
+    // next, and how long one turn takes (ms)
+    readonly property int passwordStagger: 30
+    readonly property int passwordMs: 220
+    // Copy: how long "Copied" stays before the content comes back, and the slide between them (ms)
+    readonly property int copyResetMs: 2000
+    readonly property int copySlideMs: 280
 }
