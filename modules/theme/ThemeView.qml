@@ -6,12 +6,13 @@ import "../../components"
 import "../../styles"
 import "../../state"
 
-// The theme switcher island. Top row: the island's clock and the name of the showing theme on
-// the left, the search pill in the right corner (it pulls out to the left). Below it a row of
-// theme cards (the highlighted one bigger), and the count under that. Resting on a card
-// previews that theme (Config.switcherPreviewDelayMs). Enter or a click keeps it. Esc, a click
-// outside or closing the island puts the saved theme back. Left and right (or the pointer) move
-// the highlight; typing opens the search, and while it is open up and down move it.
+// The theme switcher island. Top row: the island's clock and the name of the saved theme on the
+// left (it changes only when you select a theme, not while you move between them), the search
+// pill in the right corner (it pulls out to the left). Below it a row of theme cards (the
+// highlighted one bigger), and the count under that. Resting on a card previews that theme
+// (Config.switcherPreviewDelayMs). Enter or a click keeps it. Esc, a click outside or closing the
+// island puts the saved theme back. Left and right (or the pointer) move the highlight; typing
+// opens the search, and while it is open up and down move it.
 Item {
     id: root
 
@@ -24,6 +25,9 @@ Item {
 
     // Where the row of cards starts
     readonly property real listTop: layout.padTop + layout.searchH + layout.listGap
+
+    // The name of the saved theme: it does not follow a preview
+    readonly property string savedName: Theme.presetMap[ThemeService.committedId]?.name ?? Theme.active.name
 
     // A fresh start whenever the island shows: no search, the saved theme highlighted
     onVisibleChanged: if (visible) root.open()
@@ -95,9 +99,9 @@ Item {
     }
 
     // ── Top row ──
-    // The island's own clock sits at the far left (Island.qml moves it there); the theme's name
-    // follows it, opening letter by letter whenever it changes or the island opens, and stops
-    // short of the search pill
+    // The island's own clock sits at the far left (Island.qml moves it there); the name of the
+    // saved theme follows it, opening letter by letter when it changes or the island opens, and
+    // stops short of the search pill
     Item {
         x: root.layout.padX + root.layout.clockSlotW
         y: root.layout.padTop
@@ -107,7 +111,7 @@ Item {
 
         IrisText {
             anchors.verticalCenter: parent.verticalCenter
-            text: Theme.active.name
+            text: root.savedName
             playing: root.visible
             color: Theme.fgMuted
             font.family: Theme.fontText
@@ -215,4 +219,4 @@ Item {
         font.family: Theme.fontText
         font.pixelSize: Theme.fontSizeXs
     }
-}
+}w

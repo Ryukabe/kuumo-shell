@@ -5,9 +5,10 @@ import "../state"
 // A password field. What you type shows as dots. The eye turns the dots into the characters one
 // after another (each dot shrinks as its character grows in) and back into dots at once. The hint
 // types itself out (BackspaceText). Underneath is a normal TextInput that keeps the keyboard, the
-// cursor and the selection; its own glyphs are made clear and the cells above are drawn at the
-// positions of its characters. A password with letters outside Latin (Bengali, ...) is revealed
-// with the field's own text, without the turn animation.
+// cursor and the selection; its own glyphs are made clear and the cells above are drawn on a grid
+// as wide as the field's own bullet (the font is monospaced), so a new dot always lands in the
+// right place. A password with letters outside Latin (Bengali, ...) is revealed with the field's
+// own text, without the turn animation.
 FocusScope {
     id: root
 
@@ -31,6 +32,17 @@ FocusScope {
     readonly property bool animated: !ShellState.motionReduced
     // Complex scripts are revealed with the field's own text
     readonly property bool plainReveal: root.revealed && /[^\u0000-\u024F]/.test(field.text)
+
+    // One cell is as wide as the field's own bullet: the same font and the same character
+    TextMetrics {
+        id: dotMetrics
+        font: root.font
+        text: field.passwordCharacter
+    }
+    readonly property real cellW: dotMetrics.advanceWidth
+
+    // Where the first character starts: 0, unless a long password has scrolled the field
+    readonly property real origin: { field.text; field.cursorPosition; return field.positionToRectangle(0).x }
 
     TextInput {
         id: field
@@ -61,7 +73,7 @@ FocusScope {
         Keys.onPressed: event => root.keyPressed(event)
     }
 
-    // One cell per character, at the character's place in the field: a dot, turning into the character
+    // One cell per character: a dot, turning into the character
     Item {
         anchors.fill: field
         clip: true
@@ -74,16 +86,13 @@ FocusScope {
                 id: cell
                 required property int index
 
-                // positionToRectangle is a function call, so the text is read to refresh the values
-                readonly property real edgeLeft: { field.text; return field.positionToRectangle(index).x }
-                readonly property real edgeRight: { field.text; return field.positionToRectangle(index + 1).x }
                 readonly property string ch: field.text.charAt(index)
-
                 // 0 = a dot, 1 = the character
                 property real turn: 0
 
-                x: cell.edgeLeft
-                width: cell.edgeRight - cell.edgeLeft
+                // Every cell has the same, known width, so a new dot never lands in the wrong place
+                x: root.origin + index * root.cellW
+                width: root.cellW
                 height: parent.height
 
                 Text {

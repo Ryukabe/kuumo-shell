@@ -4,9 +4,8 @@ import "../../components"
 import "../../styles"
 import "../../state"
 
-// The volume / brightness OSD: icon on the left, then a thin track with a filled stretch and a
-// round thumb. The thumb follows the level on a bouncy spring, and gets a push when the level
-// reaches 0 or 100.
+// The volume / brightness OSD: the icon on the left, then a thin track with a filled stretch.
+// The end of the fill follows the level on a bouncy spring. Nothing else: no handle.
 Item {
     id: root
 
@@ -26,33 +25,28 @@ Item {
         NumberAnimation { duration: Motion.fadeIn; easing.type: Easing.OutCubic }
     }
 
-    // The thumb is twice the size of the layout's dot, so it reads as a handle
-    readonly property real thumbSize: layout.dotSize * 2
     readonly property real trackX: layout.iconSize + layout.iconGap
     readonly property real trackW: width - trackX
-    // The thumb travels the track, half a thumb in from each end
-    readonly property real travel: trackW - thumbSize
 
-    // The thumb follows the level on a slightly bouncy spring
+    // The end of the fill follows the level on a slightly bouncy spring
     Spring {
-        id: thumbSpring
-        target: root.thumbSize / 2 + OsdService.level * root.travel
+        id: fillSpring
+        target: OsdService.level * root.trackW
         response: Motion.osdFill.response
         dampingFraction: Motion.osdFill.damping
         animated: !ShellState.motionReduced
     }
 
-    Component.onCompleted: thumbSpring.snap()
+    Component.onCompleted: fillSpring.snap()
 
-    // The level reached 0 or 100: push the thumb past the end so it bounces back
+    // The level reached 0 or 100: push the fill's end so it bounces back
     Connections {
         target: OsdService
-        function onEdge(direction) { thumbSpring.kick(direction * Motion.osdEdgeKick) }
+        function onEdge(direction) { fillSpring.kick(direction * Motion.osdEdgeKick) }
     }
 
-    // The thumb may poke past the ends of the track while it bounces; the fill may not
-    readonly property real thumbX: thumbSpring.value
-    readonly property real fillW: Math.max(0, Math.min(trackW, thumbX))
+    // The fill may swing past its target while it bounces, but never past the ends of the track
+    readonly property real fillW: Math.max(0, Math.min(trackW, fillSpring.value))
 
     IconSwap {
         x: 0
@@ -84,19 +78,6 @@ Item {
         radius: height / 2
         anchors.verticalCenter: parent.verticalCenter
         color: Theme.accent
-        opacity: root.lit
-    }
-
-    // The thumb: a round handle with a ring
-    Rectangle {
-        x: root.trackX + root.thumbX - width / 2
-        width: root.thumbSize
-        height: width
-        radius: width / 2
-        anchors.verticalCenter: parent.verticalCenter
-        color: Theme.fg
-        border.width: root.layout.barH / 2
-        border.color: Theme.accent
         opacity: root.lit
     }
 }
