@@ -9,7 +9,7 @@ Singleton {
     property string wallpaper: ""
 
     // Folder of the wallpapers, shared by every theme (each preset lists its own files)
-    readonly property string wallpaperDir: Quickshell.shellDir + "/styles/wallpapers/"
+    readonly property string wallpaperDir: Quickshell.shellDir + "/styles/wallpaper/"
 
     // Soft moonlight halo behind the island
     property bool islandHalo: true
@@ -33,6 +33,12 @@ Singleton {
     property real osdVolumeMax: 1.0          // 1.0 = 100%
     property int osdBrightnessStep: 5        // percent per key press
     property int osdBrightnessMin: 1         // raw brightnessctl value the screen never goes below
+
+    // Control center sliders, used with the keyboard once a slider is clicked or tabbed to:
+    // the arrow keys move this much of the whole range, Page Up/Down and Shift+arrows the
+    // large step (0..1)
+    property real sliderStep: 0.01
+    property real sliderLargeStep: 0.10
 
     // Scrolling over the player skips tracks
     // true: scroll up = next track, false: scroll down = next track
@@ -74,6 +80,10 @@ Singleton {
     // Width (px) of the still thumbnails made from animated wallpapers
     property int wallpaperThumbWidth: 320
 
-    // Typewriter animation: placeholders type themselves out and typed characters settle in
+    // The clipboard island closes this long after a copy (ms), so "Copied" can be seen
+    property int clipboardCopyCloseMs: 800
+
+    // The text effects (typing, backspace, iris, and the rolling clock are separate): off shows
+    // the final text at once. Typing, backspace and iris follow this switch.
     property bool typewriter: true
 }

@@ -96,18 +96,23 @@ Item {
 
     // ── Top row ──
     // The island's own clock sits at the far left (Island.qml moves it there); the theme's name
-    // follows it, and stops short of the search pill
-    Text {
+    // follows it, opening letter by letter whenever it changes or the island opens, and stops
+    // short of the search pill
+    Item {
         x: root.layout.padX + root.layout.clockSlotW
         y: root.layout.padTop
         width: Math.max(0, search.x - root.layout.gap - x)
         height: root.layout.searchH
-        verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
-        text: Theme.active.name
-        color: Theme.fgMuted
-        font.family: Theme.fontText
-        font.pixelSize: Theme.fontSizeSm
+        clip: true
+
+        IrisText {
+            anchors.verticalCenter: parent.verticalCenter
+            text: Theme.active.name
+            playing: root.visible
+            color: Theme.fgMuted
+            font.family: Theme.fontText
+            font.pixelSize: Theme.fontSizeSm
+        }
     }
 
     // The search pill in the right corner

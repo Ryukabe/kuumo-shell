@@ -5,8 +5,9 @@ import "../state"
 // A search field that rests as a small magnifier button in a corner and pulls out sideways
 // into a text field (and shrinks back) with a spring. The caller anchors its right edge, so it
 // grows to the left while the magnifier stays at the right end. Click the magnifier, or call
-// expand(), to open it; collapse() closes it and clears the text. The placeholder types itself
-// out when it opens. Shared by the theme and wallpaper switchers.
+// expand(), to open it; collapse() closes it and clears the text. The hint types itself out when
+// it opens (BackspaceText). What you type shows as normal text. Shared by the theme and
+// wallpaper switchers.
 Item {
     id: root
 
@@ -26,15 +27,15 @@ Item {
 
     function expand() {
         root.expanded = true
-        field.forceFieldFocus()
+        field.forceActiveFocus()
     }
 
     // Opens with a first character already typed (typing while the pill is closed)
     function expandWith(first) {
         root.expanded = true
         field.text = first
-        field.input.cursorPosition = first.length
-        field.forceFieldFocus()
+        field.cursorPosition = first.length
+        field.forceActiveFocus()
     }
 
     function collapse() {
@@ -64,14 +65,19 @@ Item {
     }
 
     // The field fills the pill to the left of the magnifier
-    TypeField {
+    TextInput {
         id: field
         x: Theme.spacingMd
         width: Math.max(0, root.width - root.pillHeight - Theme.spacingMd)
         height: root.pillHeight
-        placeholder: root.placeholder
-        pixelSize: root.pixelSize
-        playing: root.expanded
+        verticalAlignment: TextInput.AlignVCenter
+        color: Theme.fg
+        selectionColor: Theme.elevatedBg
+        selectedTextColor: Theme.fg
+        font.family: Theme.fontText
+        font.pixelSize: root.pixelSize
+        clip: true
+        selectByMouse: true
         enabled: root.expanded
         opacity: root.expanded ? 1 : 0
         Behavior on opacity {
@@ -81,7 +87,34 @@ Item {
             }
         }
 
-        onKeyPressed: event => root.keyPressed(event)
+        // While the field is empty the hint's own caret shows instead of this one
+        cursorDelegate: Rectangle {
+            width: Theme.caretWidth
+            color: Theme.fg
+            opacity: field.text === "" ? 0 : 1
+        }
+
+        Keys.onPressed: event => root.keyPressed(event)
+    }
+
+    // The hint: types itself out when the pill opens
+    BackspaceText {
+        x: field.x
+        y: (root.pillHeight - height) / 2
+        height: implicitHeight
+        visible: field.text === ""
+        opacity: root.expanded ? 1 : 0
+        Behavior on opacity {
+            NumberAnimation {
+                duration: root.expanded ? Motion.fadeIn : Motion.fadeOut
+                easing.type: Easing.OutCubic
+            }
+        }
+        playing: root.expanded
+        text: root.placeholder
+        color: Theme.fgMuted
+        font.family: Theme.fontText
+        font.pixelSize: root.pixelSize
     }
 
     // The magnifier: a button while closed, the end of the field while open. It stays at the right end.

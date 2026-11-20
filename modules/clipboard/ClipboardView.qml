@@ -1,11 +1,14 @@
 import QtQuick
 import Quickshell
+import "../.." as Root
+import "../../components"
 import "../../styles"
 import "../../state"
 
 // The clipboard island: a search field on top, what you copied before as a list below.
-// Enter copies the highlighted item back and closes the island. Delete removes it and
-// Ctrl+P pins it. The same two actions show as buttons on the highlighted row.
+// Enter copies the highlighted item back: its preview slides up and "Copied" rises in its
+// place, and the island closes a moment later (Config.clipboardCopyCloseMs). Delete removes
+// an item and Ctrl+P pins it. The same two actions show as buttons on the highlighted row.
 Item {
     id: root
 
@@ -23,12 +26,22 @@ Item {
         input.forceActiveFocus()
     }
 
-    // Closing clears the search, so the next opening starts empty
+    // Closing clears the search, so the next opening starts empty, and drops a pending close
     Connections {
         target: IslandState
         function onClipboardChanged() {
-            if (!IslandState.clipboard) input.text = ""
+            if (!IslandState.clipboard) {
+                input.text = ""
+                closeTimer.stop()
+            }
         }
+    }
+
+    // Closes the island after a copy, once "Copied" has been seen
+    Timer {
+        id: closeTimer
+        interval: Root.Config.clipboardCopyCloseMs
+        onTriggered: if (IslandState.clipboard) IslandState.closeAll()
     }
 
     function highlighted() { return ClipboardService.rows[list.currentIndex] }
@@ -37,7 +50,10 @@ Item {
         const item = root.highlighted()
         if (!item) return
         ClipboardService.copy(item)
-        IslandState.closeAll()
+        // The row shows "Copied", then the island closes
+        const row = list.currentItem
+        if (row) row.copyEffect.markCopied()
+        closeTimer.restart()
     }
 
     function removeHighlighted() {
@@ -79,6 +95,13 @@ Item {
         clip: true
         selectByMouse: true
 
+        // While the field is empty the hint's own caret shows instead of this one
+        cursorDelegate: Rectangle {
+            width: Theme.caretWidth
+            color: Theme.fg
+            opacity: input.text === "" ? 0 : 1
+        }
+
         onTextChanged: ClipboardService.query = text
 
         Keys.onUpPressed: list.decrementCurrentIndex()
@@ -97,17 +120,17 @@ Item {
         }
     }
 
-    // Hint shown while the field is empty
-    Text {
+    // Hint shown while the field is empty: it types itself out when the island opens
+    BackspaceText {
         x: input.x
-        y: input.y
-        height: input.height
-        verticalAlignment: Text.AlignVCenter
+        y: input.y + (input.height - height) / 2
+        height: implicitHeight
+        visible: input.text === ""
+        playing: root.visible
         text: "Search clipboard"
         color: Theme.fgMuted
         font.family: Theme.fontText
         font.pixelSize: root.layout.fontSize
-        visible: input.text === ""
     }
 
     // ── The list: one row each, scrolls after maxRows ──
@@ -134,6 +157,9 @@ Item {
             // The picture file of an image item, or "" while it is not ready
             readonly property string thumb: ClipboardService.thumbPath(modelData.id)
             readonly property bool showsPicture: modelData.isImage && thumb !== ""
+
+            // The preview's copy effect, so the view can show "Copied" on this row
+            property alias copyEffect: copyText
 
             width: list.width
             height: root.layout.rowH
@@ -241,35 +267,47 @@ Item {
                 }
             }
 
-            // The preview (a picture says what it is), and under it the size and age
-            Column {
+            // The preview (a picture says what it is), and under it the size and age. After a
+            // copy it slides up and out of sight while "Copied" rises in its place. The row's own
+            // click does the copying, so this one is not clickable.
+            CopyText {
+                id: copyText
                 anchors.left: square.right
                 anchors.leftMargin: root.layout.iconGap
                 anchors.right: actions.left
                 anchors.rightMargin: root.layout.iconGap
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                clickable: false
+                color: Theme.fg
+                font.pixelSize: root.layout.previewFont
 
-                Text {
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
                     width: parent.width
-                    text: row.modelData.isImage
-                        ? "Image · " + row.modelData.format + " " + row.modelData.dims
-                        : row.modelData.preview
-                    color: Theme.fg
-                    font.family: Theme.fontText
-                    font.pixelSize: root.layout.previewFont
-                    wrapMode: Text.Wrap
-                    maximumLineCount: row.modelData.isImage ? 1 : root.layout.previewLines
-                    elide: Text.ElideRight
-                }
 
-                Text {
-                    width: parent.width
-                    visible: text !== ""
-                    text: ClipboardService.detail(row.modelData, ClipboardService.now)
-                    color: Theme.fgMuted
-                    font.family: Theme.fontText
-                    font.pixelSize: Theme.fontSizeXs
-                    elide: Text.ElideRight
+                    Text {
+                        width: parent.width
+                        text: row.modelData.isImage
+                            ? "Image · " + row.modelData.format + " " + row.modelData.dims
+                            : row.modelData.preview
+                        color: Theme.fg
+                        font.family: Theme.fontText
+                        font.pixelSize: root.layout.previewFont
+                        wrapMode: Text.Wrap
+                        maximumLineCount: row.modelData.isImage ? 1 : root.layout.previewLines
+                        elide: Text.ElideRight
+                    }
+
+                    Text {
+                        width: parent.width
+                        visible: text !== ""
+                        text: ClipboardService.detail(row.modelData, ClipboardService.now)
+                        color: Theme.fgMuted
+                        font.family: Theme.fontText
+                        font.pixelSize: Theme.fontSizeXs
+                        elide: Text.ElideRight
+                    }
                 }
             }
         }

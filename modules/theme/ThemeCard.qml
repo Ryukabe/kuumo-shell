@@ -8,10 +8,10 @@ import "../../styles"
 import "../../state"
 
 // One theme in the switcher: its wallpaper (its own colors when it has none), the six colors
-// of its palette as dots, and its name, which shows while the card is highlighted (by the
-// pointer or the keyboard). A shade along the bottom edge keeps the dots and the name readable
-// on any picture. The highlighted card grows with a spring and gets a ring; a small dot marks
-// the saved theme.
+// of its palette as dots, and its name, which opens letter by letter (IrisText) while the card is
+// highlighted (by the pointer or the keyboard). A shade along the bottom edge keeps the dots and
+// the name readable on any picture. The highlighted card grows with a spring and gets a ring; a
+// small dot marks the saved theme.
 Item {
     id: root
 
@@ -107,17 +107,20 @@ Item {
             width: parent.width - 2 * root.layout.cardPad
             spacing: root.layout.cardTextGap
 
-            Text {
+            // The clip keeps a long name inside the card
+            Item {
                 width: parent.width
-                text: root.entry.name
-                color: Theme.fg
-                font.family: Theme.fontText
-                font.pixelSize: Theme.fontSizeSm
-                font.bold: true
-                elide: Text.ElideRight
-                opacity: root.current || pointer.containsMouse ? 1 : 0
-                Behavior on opacity {
-                    NumberAnimation { duration: Motion.hoverFade; easing.type: Easing.OutCubic }
+                height: nameText.implicitHeight
+                clip: true
+
+                IrisText {
+                    id: nameText
+                    text: root.entry.name
+                    playing: root.current || pointer.containsMouse
+                    color: Theme.fg
+                    font.family: Theme.fontText
+                    font.pixelSize: Theme.fontSizeSm
+                    font.bold: true
                 }
             }
 

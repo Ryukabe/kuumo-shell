@@ -7,9 +7,9 @@ import "../../components"
 import "../../styles"
 import "../../state"
 
-// One wallpaper in the switcher. Its name shows while the card is highlighted (by the pointer
-// or the keyboard), on a shade along the bottom edge. The highlighted card grows with a spring
-// and gets a ring; a small dot marks the wallpaper kept for the theme.
+// One wallpaper in the switcher. Its name opens letter by letter (IrisText) while the card is
+// highlighted (by the pointer or the keyboard), on a shade along the bottom edge. The highlighted
+// card grows with a spring and gets a ring; a small dot marks the wallpaper kept for the theme.
 Item {
     id: root
 
@@ -75,36 +75,39 @@ Item {
             source: root.picture
         }
 
-        // The shade and the name, while the card is highlighted
-        Item {
-            anchors.fill: parent
+        // The shade, while the card is highlighted
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: root.layout.shadeH
             opacity: root.current || pointer.containsMouse ? 1 : 0
             Behavior on opacity {
                 NumberAnimation { duration: Motion.hoverFade; easing.type: Easing.OutCubic }
             }
-
-            Rectangle {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                height: root.layout.shadeH
-                gradient: Gradient {
-                    GradientStop { position: 0; color: root.shadeClear }
-                    GradientStop { position: 1; color: root.shadeFull }
-                }
+            gradient: Gradient {
+                GradientStop { position: 0; color: root.shadeClear }
+                GradientStop { position: 1; color: root.shadeFull }
             }
+        }
 
-            Text {
-                anchors.left: parent.left
-                anchors.bottom: parent.bottom
-                anchors.margins: root.layout.cardPad
-                width: parent.width - 2 * root.layout.cardPad
+        // The name, opening letter by letter; the clip keeps a long name inside the card
+        Item {
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            anchors.margins: root.layout.cardPad
+            width: parent.width - 2 * root.layout.cardPad
+            height: nameText.implicitHeight
+            clip: true
+
+            IrisText {
+                id: nameText
                 text: root.entry.label
+                playing: root.current || pointer.containsMouse
                 color: Theme.fg
                 font.family: Theme.fontText
                 font.pixelSize: Theme.fontSizeSm
                 font.bold: true
-                elide: Text.ElideRight
             }
         }
 

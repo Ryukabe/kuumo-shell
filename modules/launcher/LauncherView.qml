@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import "../../components"
 import "../../styles"
 import "../../state"
 
@@ -102,6 +103,13 @@ Item {
         clip: true
         selectByMouse: true
 
+        // While the field is empty the hint's own caret shows instead of this one
+        cursorDelegate: Rectangle {
+            width: Theme.caretWidth
+            color: Theme.fg
+            opacity: input.text === "" ? 0 : 1
+        }
+
         onTextChanged: {
             // A ">" typed first switches to the commands and is taken out of the field,
             // so the field only shows what you are searching for
@@ -147,17 +155,18 @@ Item {
         }
     }
 
-    // Hint shown while the field is empty
-    Text {
+    // Hint shown while the field is empty: it types itself out when the island opens and
+    // corrects itself when it changes (a command opens, ...)
+    BackspaceText {
         x: input.x
-        y: input.y
-        height: input.height
-        verticalAlignment: Text.AlignVCenter
+        y: input.y + (input.height - height) / 2
+        height: implicitHeight
+        visible: input.text === ""
+        playing: root.visible
         text: LauncherService.fieldHint
         color: Theme.fgMuted
         font.family: Theme.fontText
         font.pixelSize: root.layout.fontSize
-        visible: input.text === ""
     }
 
     // ── The list: one row each, scrolls after maxRows ──

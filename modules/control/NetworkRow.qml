@@ -1,4 +1,5 @@
 import QtQuick
+import "../../components"
 import "../../styles"
 import "../network"
 
@@ -64,6 +65,7 @@ Item {
         } else {
             input.focus = false
             input.text = ""
+            input.revealed = false
         }
     }
 
@@ -152,7 +154,7 @@ Item {
         visible: row.expanded || row.openFade > 0
         enabled: row.expanded
 
-        // Password, for a new secured network
+        // Password, for a new secured network: dots, with an eye that turns them into letters
         Rectangle {
             width: parent.width
             height: row.layout.netActionH
@@ -162,34 +164,15 @@ Item {
             border.width: row.layout.btnBorder
             border.color: input.activeFocus ? Theme.fgMuted : Theme.border
 
-            TextInput {
+            PasswordField {
                 id: input
                 anchors.fill: parent
                 anchors.leftMargin: row.layout.netPad
                 anchors.rightMargin: row.layout.netPad
-                verticalAlignment: TextInput.AlignVCenter
-                clip: true
-                echoMode: TextInput.Password
-                color: Theme.fg
-                selectionColor: Theme.fgMuted
-                selectedTextColor: Theme.bg
-                font.family: Theme.fontText
-                font.pixelSize: Theme.fontSizeSm
+                playing: row.expanded
 
-                Keys.onReturnPressed: row.submit()
-                Keys.onEnterPressed: row.submit()
-                Keys.onEscapePressed: row.toggle()    // closes this row, not the whole panel
-            }
-
-            // Hint while empty
-            Text {
-                anchors.fill: input
-                verticalAlignment: Text.AlignVCenter
-                visible: input.text.length === 0
-                text: "Password"
-                color: Theme.fgMuted
-                font.family: Theme.fontText
-                font.pixelSize: Theme.fontSizeSm
+                onAccepted: row.submit()
+                onEscaped: row.toggle()    // closes this row, not the whole panel
             }
         }
 

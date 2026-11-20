@@ -520,17 +520,16 @@ Item {
             }
         }
 
-        // The one shared clock: it moves and scales, it is never swapped. It fades out
-        // during an OSD, a toast, the launcher, the clipboard and the power menu, and on the
-        // control center's other pages. In the two switchers it sits at the top left.
-        NumberFlow {
+        // The one shared clock: it moves and scales, it is never swapped. Only the digits that
+        // change roll (ClockText). It fades out during an OSD, a toast, the launcher, the
+        // clipboard and the power menu, and on the control center's other pages. In the two
+        // switchers it sits at the top left.
+        ClockText {
             id: clock
             weight: Font.Bold
             x: sx.value
             y: sy.value
             text: SystemState.timeText
-            // Hour tens 0-2, minute tens 0-5, everything else 0-9 (index 2 is the colon)
-            rings: [3, 10, 10, 6, 10]
             pixelSize: root.fullClockSize
             animated: !ShellState.motionReduced
             transformOrigin: Item.TopLeft

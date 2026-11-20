@@ -1,10 +1,12 @@
 import QtQuick
-import QtQuick.Shapes
 import "../.." as Root
 import "../../components"
 import "../../styles"
 import "../../state"
 
+// The volume / brightness OSD: icon on the left, then a thin track with a filled stretch and a
+// round thumb. The thumb follows the level on a bouncy spring, and gets a push when the level
+// reaches 0 or 100.
 Item {
     id: root
 
@@ -24,31 +26,33 @@ Item {
         NumberAnimation { duration: Motion.fadeIn; easing.type: Easing.OutCubic }
     }
 
+    // The thumb is twice the size of the layout's dot, so it reads as a handle
+    readonly property real thumbSize: layout.dotSize * 2
     readonly property real trackX: layout.iconSize + layout.iconGap
     readonly property real trackW: width - trackX
-    // The moon travels the track, half a moon in from each end
-    readonly property real travel: trackW - layout.dotSize
+    // The thumb travels the track, half a thumb in from each end
+    readonly property real travel: trackW - thumbSize
 
-    // The moon follows the level on a slightly bouncy spring
+    // The thumb follows the level on a slightly bouncy spring
     Spring {
-        id: moonSpring
-        target: root.layout.dotSize / 2 + OsdService.level * root.travel
+        id: thumbSpring
+        target: root.thumbSize / 2 + OsdService.level * root.travel
         response: Motion.osdFill.response
         dampingFraction: Motion.osdFill.damping
         animated: !ShellState.motionReduced
     }
 
-    Component.onCompleted: moonSpring.snap()
+    Component.onCompleted: thumbSpring.snap()
 
-    // The level reached 0 or 100: push the moon past the end so it bounces back
+    // The level reached 0 or 100: push the thumb past the end so it bounces back
     Connections {
         target: OsdService
-        function onEdge(direction) { moonSpring.kick(direction * Motion.osdEdgeKick) }
+        function onEdge(direction) { thumbSpring.kick(direction * Motion.osdEdgeKick) }
     }
 
-    // The moon may poke past the ends of the track while it bounces; the fill may not
-    readonly property real moonX: moonSpring.value
-    readonly property real fillW: Math.max(0, Math.min(trackW, moonX))
+    // The thumb may poke past the ends of the track while it bounces; the fill may not
+    readonly property real thumbX: thumbSpring.value
+    readonly property real fillW: Math.max(0, Math.min(trackW, thumbX))
 
     IconSwap {
         x: 0
@@ -72,7 +76,7 @@ Item {
         color: Theme.border
     }
 
-    // The lit part of the bar
+    // The filled stretch of the bar
     Rectangle {
         x: root.trackX
         width: root.fillW
@@ -83,44 +87,16 @@ Item {
         opacity: root.lit
     }
 
-    // Moonlight around the leading edge
-    Shape {
-        id: glow
-        readonly property real r: root.layout.glowReach
-        x: root.trackX + root.moonX - r
-        y: (root.height - 2 * r) / 2
-        width: 2 * r
-        height: 2 * r
-        opacity: root.lit
-
-        ShapePath {
-            strokeWidth: -1
-            fillGradient: RadialGradient {
-                centerX: glow.r
-                centerY: glow.r
-                centerRadius: glow.r
-                focalX: centerX
-                focalY: centerY
-                GradientStop { position: 0;                    color: Qt.alpha(Theme.accent, Theme.glowPeak) }
-                GradientStop { position: Theme.glowFalloffAt;  color: Qt.alpha(Theme.accent, Theme.glowPeak * Theme.glowFalloff) }
-                GradientStop { position: 1;                    color: Qt.alpha(Theme.accent, 0) }
-            }
-            startX: 0; startY: 0
-            PathLine { x: glow.width; y: 0 }
-            PathLine { x: glow.width; y: glow.height }
-            PathLine { x: 0; y: glow.height }
-            PathLine { x: 0; y: 0 }
-        }
-    }
-
-    // The moon itself
+    // The thumb: a round handle with a ring
     Rectangle {
-        x: root.trackX + root.moonX - width / 2
-        width: root.layout.dotSize
+        x: root.trackX + root.thumbX - width / 2
+        width: root.thumbSize
         height: width
         radius: width / 2
         anchors.verticalCenter: parent.verticalCenter
-        color: Theme.accent
+        color: Theme.fg
+        border.width: root.layout.barH / 2
+        border.color: Theme.accent
         opacity: root.lit
     }
 }

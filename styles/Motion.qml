@@ -24,7 +24,7 @@ Singleton {
 
     // Volume / brightness OSD: how long it stays after the last change
     readonly property int osdHoldMs: 1500
-    // The bar's moon: a slightly bouncy spring, plus a push (value units per second,
+    // The bar's thumb: a slightly bouncy spring, plus a push (value units per second,
     // here pixels) when the level reaches 0 or 100
     readonly property var osdFill: ({ response: 0.40, damping: 0.6 })
     readonly property real osdEdgeKick: 200
@@ -32,6 +32,10 @@ Singleton {
     readonly property int iconSwap: 340
     readonly property real iconOvershoot: 1.4
     readonly property real iconPop: 0.55      // scale the old icon shrinks to and the new one grows from
+
+    // Control center sliders: after you let go (or step with a key) the moon stays where you put
+    // it this long (ms) before it follows the real level again, so nothing springs back
+    readonly property int sliderHoldMs: 600
 
     // Track change in the music viewer
     readonly property int textSwap: 380       // title and artist slide + fade
@@ -66,7 +70,7 @@ Singleton {
     readonly property var rubberLead: ({ response: 0.16, damping: 0.62 })
     readonly property var rubberTrail: ({ response: 0.38, damping: 0.9 })
 
-    // The old typewriter field (TypeField): goes when the new text effects replace it
+    // The old typewriter field (TypeField), kept for now
     readonly property int typeMs: 32
     readonly property int typedCharMs: 140
     readonly property int typedCharRise: 4
