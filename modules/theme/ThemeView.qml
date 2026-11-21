@@ -219,4 +219,4 @@ Item {
         font.family: Theme.fontText
         font.pixelSize: Theme.fontSizeXs
     }
-}w
+}
