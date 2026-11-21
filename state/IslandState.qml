@@ -2,7 +2,7 @@ pragma Singleton
 import Quickshell
 
 Singleton {
-    // "idle" | "extended" | "control" | "launcher" | "clipboard" | "power" | "theme" | "wallpaper"
+    // "idle" | "extended" | "control" | "launcher" | "clipboard" | "power" | "theme" | "wallpaper" | "polkit"
     property string mode: "idle"
     readonly property bool extended: mode === "extended"
     readonly property bool control: mode === "control"
@@ -11,6 +11,7 @@ Singleton {
     readonly property bool power: mode === "power"
     readonly property bool theme: mode === "theme"
     readonly property bool wallpaper: mode === "wallpaper"
+    readonly property bool polkit: mode === "polkit"
     // Any panel open, i.e. the island is not at rest. The OSD does not count: it
     // never takes the keyboard or the screen.
     readonly property bool open: mode !== "idle"
@@ -39,6 +40,10 @@ Singleton {
 
     function openWallpaper() { mode = "wallpaper" }
     function toggleWallpaper() { wallpaper ? collapse() : openWallpaper() }
+
+    // The polkit prompt opens by itself (PolkitService) over whatever is open, and has
+    // no toggle: closing it cancels the request
+    function openPolkit() { mode = "polkit" }
 
     // The OSD (volume, brightness) borrows the island for a moment on top of whatever
     // mode it is in, then gives it back.

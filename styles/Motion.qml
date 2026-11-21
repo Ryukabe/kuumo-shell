@@ -70,6 +70,13 @@ Singleton {
     readonly property var rubberLead: ({ response: 0.16, damping: 0.62 })
     readonly property var rubberTrail: ({ response: 0.38, damping: 0.9 })
 
+    // Polkit prompt: the Authenticate button growing into the field when you start typing,
+    // and the field's shake after a wrong password (a spring around its resting place,
+    // kicked sideways by shakeKick, in pixels per second)
+    readonly property var authButton: ({ response: 0.34, damping: 0.85 })
+    readonly property var shake: ({ response: 0.28, damping: 0.3 })
+    readonly property real shakeKick: 300
+
     // The old typewriter field (TypeField), kept for now
     readonly property int typeMs: 32
     readonly property int typedCharMs: 140

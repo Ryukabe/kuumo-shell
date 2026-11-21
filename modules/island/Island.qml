@@ -10,6 +10,7 @@ import "../launcher"
 import "../media"
 import "../notifications"
 import "../osd"
+import "../polkit"
 import "../power"
 import "../theme"
 import "../wallpaper"
@@ -110,6 +111,19 @@ Item {
             slots: 5, btnSize: 52, btnBorder: 1, btnGlowReach: 16, tileIconSize: 24, labelGap: 6,
             holdRingW: 3
         },
+        // The polkit prompt: a header (icon box, the message of up to two lines, and the user
+        // and action id under it), then the password field, then a line for a wrong password.
+        // The size is fixed: h = padTop + headH + gap + fieldH + errorGap + errorH + padBottom.
+        //  - Field: a lock icon (caps lock symbol while caps lock is on) at the left, the
+        //    password in the middle, and at the right the Authenticate button, authW wide
+        //    once you type, btnInset away from the field's edge.
+        polkit: {
+            w: 436, h: 160, clockSize: 12, padX: 20, padTop: 18, padBottom: 16,
+            headH: 52, iconBox: 40, iconSize: 22, iconGap: 14, textGap: 3,
+            gap: 14, fieldH: 40, fieldPad: 12, fieldGap: 10, capsSize: 18,
+            authW: 32, btnInset: 4, btnIconSize: 18,
+            errorGap: 6, errorH: 14
+        },
         // The theme switcher: a top row, a row of theme cards, and the count under it. The size
         // is fixed: h = padTop + searchH + listGap + rowH + footerH + padBottom.
         //  - Top row: the island's clock at the far left (clockCenterY = padTop + searchH / 2 is
@@ -190,8 +204,13 @@ Item {
     readonly property bool themeServiceStarted: ThemeService.started
     readonly property bool wallpaperServiceStarted: WallpaperService.started
 
-    // The power menu and the two switchers have fixed sizes, so layouts.power, layouts.theme
-    // and layouts.wallpaper are used as they are (the mode name finds them in the last step below).
+    // Same for the polkit service: it registers the polkit agent when the shell starts, so a
+    // request can open the prompt at any time
+    readonly property bool polkitServiceStarted: PolkitService.started
+
+    // The power menu, the polkit prompt and the two switchers have fixed sizes, so layouts.power,
+    // layouts.polkit, layouts.theme and layouts.wallpaper are used as they are (the mode name
+    // finds them in the last step below).
     readonly property var cur: IslandState.osdActive
         ? layouts.osd
         : toastVisible
@@ -213,11 +232,13 @@ Item {
 
     function clamp01(v) { return Math.max(0, Math.min(1, v)) }
 
-    // The clock fades out during an OSD, a toast, the launcher, the clipboard and the power
-    // menu, and on the control center's other pages (Wi-Fi list, Night Light, KDE Connect,
-    // notifications); it shows on the control center's main page and in the two switchers
+    // The clock fades out during an OSD, a toast, the launcher, the clipboard, the power
+    // menu and the polkit prompt, and on the control center's other pages (Wi-Fi list, Night
+    // Light, KDE Connect, notifications); it shows on the control center's main page and in
+    // the two switchers
     readonly property bool clockHidden: IslandState.osdActive || toastVisible
         || IslandState.launcher || IslandState.clipboard || IslandState.power
+        || IslandState.polkit
         || (IslandState.control && controlView.page !== "main")
 
     // Height of the clock + date block when extended, used to center it vertically
@@ -394,6 +415,22 @@ Item {
     }
     readonly property real powerReveal: powerRevealed * powerShown
 
+    // The polkit prompt content appears the same way, measured by width
+    readonly property real polkitGrowth: clamp01(
+        (sw.value - layouts.idle.w) / (layouts.polkit.w - layouts.idle.w))
+    readonly property real polkitRevealed: clamp01(
+        (polkitGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
+
+    // Leaving the polkit prompt (closing or an OSD) hides it fast
+    property real polkitShown: IslandState.polkit && !IslandState.osdActive ? 1 : 0
+    Behavior on polkitShown {
+        NumberAnimation {
+            duration: root.polkitShown > 0 || IslandState.osdActive || !IslandState.polkit ? Motion.fadeOut : 0
+            easing.type: Easing.OutCubic
+        }
+    }
+    readonly property real polkitReveal: polkitRevealed * polkitShown
+
     // The theme switcher content appears the same way, measured by width
     readonly property real themeGrowth: clamp01(
         (sw.value - layouts.idle.w) / (layouts.theme.w - layouts.idle.w))
@@ -429,9 +466,9 @@ Item {
     // ── Opening and closing by hover ──
     // Hovering the island opens the extended panel after a short delay; leaving it closes
     // the panel after a slightly longer one. Only the extended panel closes this way: the
-    // control center, the launcher, the clipboard, the power menu and the switchers stay
-    // until you click outside or press ESC. While a toast shows, hovering keeps the toast
-    // instead of opening the panel.
+    // control center, the launcher, the clipboard, the power menu, the polkit prompt and the
+    // switchers stay until you click outside or press ESC. While a toast shows, hovering
+    // keeps the toast instead of opening the panel.
     Timer {
         id: openTimer
         interval: Root.Config.islandHoverOpenMs
@@ -522,8 +559,8 @@ Item {
 
         // The one shared clock: it moves and scales, it is never swapped. Only the digits that
         // change roll (ClockText). It fades out during an OSD, a toast, the launcher, the
-        // clipboard and the power menu, and on the control center's other pages. In the two
-        // switchers it sits at the top left.
+        // clipboard, the power menu and the polkit prompt, and on the control center's other
+        // pages. In the two switchers it sits at the top left.
         ClockText {
             id: clock
             weight: Font.Bold
@@ -639,6 +676,17 @@ Item {
             y: 0
             width: root.layouts.power.w
             height: root.layouts.power.h
+        }
+
+        // Polkit prompt: the message, the password field with the Authenticate button inside
+        // it, and the wrong-password line, as tall as the island
+        PolkitView {
+            layout: root.layouts.polkit
+            reveal: root.polkitReveal
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 0
+            width: root.layouts.polkit.w
+            height: root.layouts.polkit.h
         }
 
         // Theme switcher: the name and search pill on top, a row of theme cards, as tall as

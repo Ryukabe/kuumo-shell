@@ -86,4 +86,10 @@ Singleton {
     // The text effects (typing, backspace, iris, and the rolling clock are separate): off shows
     // the final text at once. Typing, backspace and iris follow this switch.
     property bool typewriter: true
+
+    // Polkit prompt: the password field shakes after a wrong password
+    property bool polkitShake: true
+    // Caps lock is read from Hyprland this long after a key press (ms), so the compositor
+    // has updated its state by then
+    property int capsLockRefreshMs: 40
 }
