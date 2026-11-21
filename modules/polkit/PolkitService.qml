@@ -16,6 +16,12 @@ Singleton {
     readonly property bool registered: agent.isRegistered
     readonly property bool active: agent.isActive
 
+    // The open authentication request (an AuthFlow) or null. qmllint cannot see the
+    // AuthFlow type, so it is read from the agent only here and used through this property.
+    // qmllint disable unresolved-type
+    readonly property var flow: agent.flow
+    // qmllint enable unresolved-type
+
     // What the prompt shows. Kept after the request ends so the text does not
     // vanish while the island fades out.
     property string message: ""
@@ -27,9 +33,9 @@ Singleton {
     signal wrongPassword()
 
     function submit(password) {
-        if (agent.flow && password.length > 0) {
+        if (root.flow && password.length > 0) {
             root.wrong = false
-            agent.flow.submit(password)
+            root.flow.submit(password)
         }
     }
 
@@ -37,7 +43,7 @@ Singleton {
 
     // Cancel the open request, if there is one
     function cancel() {
-        const f = agent.flow
+        const f = root.flow
         if (f && !f.isCompleted) f.cancelAuthenticationRequest()
     }
 
@@ -62,26 +68,26 @@ Singleton {
     // Copy what the prompt shows; RestoreNone keeps the last value after the flow ends
     Binding {
         target: root; property: "message"
-        value: agent.flow ? agent.flow.message : ""
-        when: agent.flow != null
+        value: root.flow ? root.flow.message : ""
+        when: root.flow != null
         restoreMode: Binding.RestoreNone
     }
     Binding {
         target: root; property: "userName"
-        value: agent.flow && agent.flow.selectedIdentity ? (agent.flow.selectedIdentity.displayName || "") : ""
-        when: agent.flow != null
+        value: root.flow && root.flow.selectedIdentity ? (root.flow.selectedIdentity.displayName || "") : ""
+        when: root.flow != null
         restoreMode: Binding.RestoreNone
     }
 
     Connections {
-        target: agent.flow
+        target: root.flow
         ignoreUnknownSignals: true
 
-        function onFailedChanged() { if (agent.flow && agent.flow.failed) root._fail() }
+        function onFailedChanged() { if (root.flow && root.flow.failed) root._fail() }
         function onAuthenticationFailed() { root._fail() }
         // Done, or cancelled by the system: close the island
         function onIsCompletedChanged() {
-            if (agent.flow && agent.flow.isCompleted && IslandState.polkit) IslandState.collapse()
+            if (root.flow && root.flow.isCompleted && IslandState.polkit) IslandState.collapse()
         }
     }
 

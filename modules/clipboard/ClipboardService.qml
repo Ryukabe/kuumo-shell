@@ -47,16 +47,16 @@ Singleton {
         id: jobTemplate
         Process {
             property var done: null
-            onExited: {
-                if (done) done()
+            Component.onCompleted: running = true
+            onExited: (exitCode) => {
+                if (done) done(exitCode)
                 destroy()
             }
         }
     }
-
+    
     function run(args, done) {
-        const job = jobTemplate.createObject(root, { command: args, done: done })
-        job.running = true
+        jobTemplate.createObject(root, { command: args, done: done })
     }
 
     // ── Starting up ──
@@ -222,9 +222,11 @@ Singleton {
         if (root.thumbs[id] !== undefined) return
         root.thumbs[id] = "requested"
         root.run(
-            ["sh", "-c", 'mkdir -p "$2" && printf "%s\\n" "$1" | cliphist decode > "$2/$1"', "sh", id, root.cacheDir],
-            function () {
-                root.thumbs[id] = "ready"
+            ["sh", "-c",
+             'mkdir -p "$2" && printf "%s" "$1" | cliphist decode > "$2/$1" && [ -s "$2/$1" ] || { rm -f "$2/$1"; exit 1; }',
+             "sh", id, root.cacheDir],
+            function (code) {
+                root.thumbs[id] = code === 0 ? "ready" : "failed"
                 root.thumbVersion += 1
             })
     }
@@ -237,14 +239,14 @@ Singleton {
     // ── Actions ──
     // Put the item back on the clipboard
     function copy(item) {
-        Quickshell.execDetached(["sh", "-c", 'printf "%s\\n" "$1" | cliphist decode | wl-copy', "sh", item.id])
+        Quickshell.execDetached(["sh", "-c", 'printf "%s" "$1" | cliphist decode | wl-copy', "sh", item.id])
     }
 
     // Remove the item from the history (and its pin), then read the list again
     function remove(item) {
         root.pins = root.pins.filter(k => k !== item.key)
         root.save()
-        root.run(["sh", "-c", 'printf "%s\\n" "$1" | cliphist delete', "sh", item.id], root.refresh)
+        root.run(["sh", "-c", 'printf "%s" "$1" | cliphist delete', "sh", item.id], root.refresh)
     }
 
     function togglePin(item) {

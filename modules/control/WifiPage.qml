@@ -45,7 +45,7 @@ Item {
 
     // ── Header: back arrow, title, and a note while scanning ──
     PageHeader {
-        id: header
+        id: pageHeader
         layout: root.layout
         width: parent.width
         title: "Wi-Fi"
@@ -57,7 +57,7 @@ Item {
     // ── The networks ──
     ListView {
         id: list
-        anchors.top: header.bottom
+        anchors.top: pageHeader.bottom
         anchors.topMargin: root.layout.rowGap
         anchors.bottom: parent.bottom
         width: parent.width

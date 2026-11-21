@@ -52,8 +52,8 @@ Item {
             var h = dt / steps
             var x = root.value
             var v = root.velocity
-            for (var i = 0; i < steps; ++i) {
-                var a = -root._k * (x - root.target) - root._c * v
+            for (let i = 0; i < steps; ++i) {
+                const a = -root._k * (x - root.target) - root._c * v
                 v += a * h
                 x += v * h
             }

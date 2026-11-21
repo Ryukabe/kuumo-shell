@@ -1,6 +1,8 @@
 pragma ComponentBehavior: Bound
 pragma Singleton
 
+// qmllint disable unqualified unresolved-type
+
 import QtQuick
 import Quickshell
 import Quickshell.Io

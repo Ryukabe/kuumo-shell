@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import "../styles"
 import "../state"
@@ -41,8 +43,8 @@ FocusScope {
     }
     readonly property real cellW: dotMetrics.advanceWidth
 
-    // Where the first character starts: 0, unless a long password has scrolled the field
-    readonly property real origin: { field.text; field.cursorPosition; return field.positionToRectangle(0).x }
+    function originFor(text, cursor) { return field.positionToRectangle(0).x }
+    readonly property real origin: originFor(field.text, field.cursorPosition)
 
     TextInput {
         id: field

@@ -5,7 +5,6 @@ NumberFlow 1.0 NumberFlow.qml
 SearchPill 1.0 SearchPill.qml
 Spring 1.0 Spring.qml
 SlideText 1.0 SlideText.qml
-TypeField 1.0 TypeField.qml
 TypeCaret 1.0 TypeCaret.qml
 TypingText 1.0 TypingText.qml
 BackspaceText 1.0 BackspaceText.qml
