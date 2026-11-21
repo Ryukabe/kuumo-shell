@@ -1,5 +1,6 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import Quickshell
 import "../.." as Root
 import "../../components"
 import "../../styles"
@@ -15,6 +16,7 @@ Item {
     // Sizes from layouts.clipboard in Island.qml, and how far the content has faded in (0..1)
     property var layout
     property real reveal: 0
+    signal copiedRow(int rowIndex)
 
     opacity: reveal
     visible: reveal > 0
@@ -51,8 +53,7 @@ Item {
         if (!item) return
         ClipboardService.copy(item)
         // The row shows "Copied", then the island closes
-        const row = list.currentItem
-        if (row) row.copyEffect.markCopied()
+        root.copiedRow(list.currentIndex)
         closeTimer.restart()
     }
 
@@ -159,8 +160,14 @@ Item {
             property bool thumbFailed: false
             readonly property bool showsPicture: modelData.isImage && thumb !== "" && !thumbFailed
 
-            // The preview's copy effect, so the view can show "Copied" on this row
-            property alias copyEffect: copyText
+            // 3. In the delegate, delete "property alias copyEffect: copyText"
+            //    (and the comment above it), then add this next to the other children
+            Connections {
+                target: root
+                function onCopiedRow(rowIndex) {
+                    if (rowIndex === row.index) copyText.markCopied()
+                }
+            }
 
             width: list.width
             height: root.layout.rowH

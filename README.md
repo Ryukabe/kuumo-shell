@@ -48,16 +48,22 @@ Start it from your Hyprland autostart. `kuumo-shell.sh` is a helper script (`sta
 
 ## Usage
 
-The island is driven over IPC, so you can bind these commands to any keys you like:
+Everything is driven over IPC, so you can bind these commands to any keys you like.
 
 | Command | Action |
 | --- | --- |
 | `qs ipc call island toggle` | Switch between the pill and the extended panel |
 | `qs ipc call island expand` | Open the extended panel |
 | `qs ipc call island collapse` | Back to the pill |
-| `qs ipc call island control` | Open the control center |
-| `qs ipc call island clipboard` | Open the clipboard |
+| `qs ipc call island control` | Control center |
+| `qs ipc call island launcher` | App launcher |
+| `qs ipc call island clipboard` | Clipboard history |
+| `qs ipc call island power` | Power menu |
+| `qs ipc call island theme` | Theme switcher |
+| `qs ipc call island wallpaper` | Wallpaper switcher |
 | `qs ipc call island close` | Close whatever is open |
+| `qs ipc call osd volumeUp` / `volumeDown` / `volumeMute` | Volume with the on-screen popup |
+| `qs ipc call osd brightnessUp` / `brightnessDown` | Brightness with the on-screen popup |
 
 Run `qs ipc show` to list every target and function.
 
