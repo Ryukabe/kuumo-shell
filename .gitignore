@@ -1,0 +1,5 @@
+state/*.json
+styles/wallpapers/*
+!styles/wallpapers/.gitkeep
+!styles/wallpapers/FILE-FOR-KUUMODARK.png
+!styles/wallpapers/FILE-FOR-EVERBLUSH.jpg
