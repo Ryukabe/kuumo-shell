@@ -4,9 +4,13 @@ import "../../components"
 import "../../styles"
 import "../../state"
 
-// The polkit prompt: icon, message, user and action on top, then the password field.
-// The Authenticate button lives inside the field's right side and grows in once you
-// start typing. There is no cancel button: closing the island cancels.
+// The polkit prompt, top to bottom:
+//  - header row: a round icon and the title on the left, the user (a pill) in the corner
+//  - the message, on its own full-width lines
+//  - the password field, with the Authenticate button inside its right side (it grows in
+//    once you type)
+//  - a line for a wrong password
+// There is no cancel button: closing the island cancels.
 Item {
     id: root
 
@@ -18,6 +22,10 @@ Item {
     // How far the Authenticate button has grown (0..1)
     readonly property real authFrac: layout.authW > 0
         ? Math.min(1, Math.max(0, authW.value / layout.authW)) : 0
+
+    // Y positions of the blocks, top to bottom, all from the layout block
+    readonly property real msgY: layout.padTop + layout.headH + layout.msgGap
+    readonly property real fieldY: msgY + layout.msgH + layout.fieldGap
 
     opacity: reveal
     visible: reveal > 0
@@ -65,15 +73,18 @@ Item {
         }
     }
 
-    // ── Header ──
+    // ── Header row ──
+    // Round icon with a thin ring, like the power menu's buttons
     Rectangle {
-        id: iconBox
+        id: iconRing
         x: root.layout.padX
         y: root.layout.padTop + (root.layout.headH - height) / 2
-        width: root.layout.iconBox
-        height: root.layout.iconBox
-        radius: Theme.radiusMedium
-        color: Theme.elevatedBg
+        width: root.layout.headH
+        height: root.layout.headH
+        radius: Theme.radiusFull
+        color: Theme.subBg
+        border.width: root.layout.ringW
+        border.color: Theme.border
 
         Text {
             anchors.centerIn: parent
@@ -84,45 +95,82 @@ Item {
         }
     }
 
-    Column {
-        x: root.layout.padX + root.layout.iconBox + root.layout.iconGap
+    // Title: takes the room left between the icon and the user pill
+    Text {
+        x: iconRing.x + iconRing.width + root.layout.iconGap
         y: root.layout.padTop + (root.layout.headH - height) / 2
-        width: root.width - x - root.layout.padX
-        spacing: root.layout.textGap
+        width: userPill.x - x - root.layout.iconGap
+        text: "Authentication required"
+        color: Theme.fg
+        font.family: Theme.fontText
+        font.pixelSize: Theme.fontSizeMd
+        font.weight: Font.DemiBold
+        elide: Text.ElideRight
+    }
 
-        // What is being asked for
-        Text {
-            width: parent.width
-            text: PolkitService.message
-            color: Theme.fg
-            font.family: Theme.fontText
-            font.pixelSize: Theme.fontSizeMd
-            wrapMode: Text.Wrap
-            maximumLineCount: 2
-            elide: Text.ElideRight
-        }
+    // The user: a pill in the top right corner
+    Rectangle {
+        id: userPill
+        visible: PolkitService.userName !== ""
+        x: root.width - root.layout.padX - width
+        y: root.layout.padTop + (root.layout.headH - height) / 2
+        width: pillRow.implicitWidth + 2 * root.layout.pillPad
+        height: root.layout.pillH
+        radius: Theme.radiusFull
+        color: Theme.elevatedBg
+        border.width: root.layout.ringW
+        border.color: Theme.border
 
-        // Who authenticates, and the action id
-        Text {
-            width: parent.width
-            text: [PolkitService.userName, PolkitService.actionId].filter(s => s !== "").join("  ·  ")
-            color: Theme.fgMuted
-            font.family: Theme.fontMono
-            font.pixelSize: Theme.fontSizeXs
-            elide: Text.ElideRight
+        Row {
+            id: pillRow
+            anchors.centerIn: parent
+            spacing: root.layout.pillGap
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "person"
+                color: Theme.accent
+                font.family: Theme.fontIcon
+                font.pixelSize: root.layout.pillIconSize
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: PolkitService.userName
+                color: Theme.fg
+                font.family: Theme.fontText
+                font.pixelSize: Theme.fontSizeSm
+                font.weight: Font.DemiBold
+            }
         }
+    }
+
+    // ── Message ──
+    Text {
+        x: root.layout.padX
+        y: root.msgY
+        width: root.width - 2 * root.layout.padX
+        height: root.layout.msgH
+        text: PolkitService.message
+        color: Theme.fgMuted
+        font.family: Theme.fontText
+        font.pixelSize: Theme.fontSizeMd
+        wrapMode: Text.Wrap
+        maximumLineCount: 3
+        elide: Text.ElideRight
+        verticalAlignment: Text.AlignTop
     }
 
     // ── Password field ──
     Rectangle {
         id: box
         x: root.layout.padX
-        y: root.layout.padTop + root.layout.headH + root.layout.gap
+        y: root.fieldY
         width: root.width - 2 * root.layout.padX
         height: root.layout.fieldH
         radius: Theme.radiusMedium
         color: Theme.subBg
-        border.width: 1
+        border.width: root.layout.ringW
         border.color: field.activeFocus ? Theme.accent : Theme.border
         transform: Translate { x: shake.value }
 
@@ -144,9 +192,9 @@ Item {
         PasswordField {
             id: field
             anchors.left: lead.right
-            anchors.leftMargin: root.layout.fieldGap
+            anchors.leftMargin: root.layout.innerGap
             anchors.right: authBtn.left
-            anchors.rightMargin: root.layout.fieldGap
+            anchors.rightMargin: root.layout.innerGap
             height: parent.height
             font.pixelSize: Theme.fontSizeMd
             placeholder: "Password"
@@ -200,9 +248,9 @@ Item {
 
     // ── Wrong password ──
     Text {
-        x: root.layout.padX
+        x: root.layout.padX + root.layout.fieldPad
         y: box.y + box.height + root.layout.errorGap
-        width: root.width - 2 * root.layout.padX
+        width: root.width - 2 * root.layout.padX - root.layout.fieldPad
         text: "Wrong password, try again"
         color: Theme.red
         font.family: Theme.fontText

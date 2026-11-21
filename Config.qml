@@ -9,7 +9,7 @@ Singleton {
     property string wallpaper: ""
 
     // Folder of the wallpapers, shared by every theme (each preset lists its own files)
-    readonly property string wallpaperDir: Quickshell.shellDir + "/styles/wallpaper/"
+    readonly property string wallpaperDir: Quickshell.shellDir + "/styles/wallpapers/"
 
     // Soft moonlight halo behind the island
     property bool islandHalo: true

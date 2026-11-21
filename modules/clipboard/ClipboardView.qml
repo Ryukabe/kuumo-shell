@@ -156,7 +156,8 @@ Item {
             readonly property bool current: index === list.currentIndex
             // The picture file of an image item, or "" while it is not ready
             readonly property string thumb: ClipboardService.thumbPath(modelData.id)
-            readonly property bool showsPicture: modelData.isImage && thumb !== ""
+            property bool thumbFailed: false
+            readonly property bool showsPicture: modelData.isImage && thumb !== "" && !thumbFailed
 
             // The preview's copy effect, so the view can show "Copied" on this row
             property alias copyEffect: copyText
@@ -206,6 +207,7 @@ Item {
                     fillMode: Image.PreserveAspectCrop
                     sourceSize: Qt.size(width, height)
                     source: row.showsPicture ? "file://" + row.thumb : ""
+                    onStatusChanged: if (status === Image.Error) row.thumbFailed = true
                 }
 
                 Text {

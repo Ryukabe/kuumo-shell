@@ -19,7 +19,6 @@ Singleton {
     // What the prompt shows. Kept after the request ends so the text does not
     // vanish while the island fades out.
     property string message: ""
-    property string actionId: ""
     property string userName: ""
 
     // True after a wrong password, until you type again
@@ -64,12 +63,6 @@ Singleton {
     Binding {
         target: root; property: "message"
         value: agent.flow ? agent.flow.message : ""
-        when: agent.flow != null
-        restoreMode: Binding.RestoreNone
-    }
-    Binding {
-        target: root; property: "actionId"
-        value: agent.flow ? agent.flow.actionId : ""
         when: agent.flow != null
         restoreMode: Binding.RestoreNone
     }

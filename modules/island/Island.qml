@@ -111,18 +111,24 @@ Item {
             slots: 5, btnSize: 52, btnBorder: 1, btnGlowReach: 16, tileIconSize: 24, labelGap: 6,
             holdRingW: 3
         },
-        // The polkit prompt: a header (icon box, the message of up to two lines, and the user
-        // and action id under it), then the password field, then a line for a wrong password.
-        // The size is fixed: h = padTop + headH + gap + fieldH + errorGap + errorH + padBottom.
-        //  - Field: a lock icon (caps lock symbol while caps lock is on) at the left, the
-        //    password in the middle, and at the right the Authenticate button, authW wide
-        //    once you type, btnInset away from the field's edge.
+        // The polkit prompt, top to bottom: a header row (round icon and title on the left,
+        // the user pill in the right corner), the message (up to two lines), the password
+        // field, and a line for a wrong password. The size is fixed:
+        // h = padTop + headH + msgGap + msgH + fieldGap + fieldH + errorGap + errorH + padBottom.
+        //  - Header: the icon ring is headH wide and tall; the pill is pillH tall, with pillPad
+        //    at its sides and pillGap between its icon and the name.
+        //  - Field: fieldGap is the space above it; inside it a lock icon (caps lock symbol
+        //    while caps lock is on), the password, and at the right the Authenticate button,
+        //    authW wide once you type, btnInset away from the field's edge. innerGap is the
+        //    space between those parts. ringW is the line width of the rings and the border.
         polkit: {
-            w: 436, h: 160, clockSize: 12, padX: 20, padTop: 18, padBottom: 16,
-            headH: 52, iconBox: 40, iconSize: 22, iconGap: 14, textGap: 3,
-            gap: 14, fieldH: 40, fieldPad: 12, fieldGap: 10, capsSize: 18,
-            authW: 32, btnInset: 4, btnIconSize: 18,
-            errorGap: 6, errorH: 14
+            w: 400, h: 186, clockSize: 12, padX: 20, padTop: 18, padBottom: 16,
+            headH: 30, iconSize: 16, iconGap: 10, ringW: 1,
+            pillH: 26, pillPad: 10, pillGap: 6, pillIconSize: 14,
+            msgGap: 10, msgH: 40,
+            fieldGap: 14, fieldH: 40, fieldPad: 12, innerGap: 10, capsSize: 16,
+            authW: 32, btnInset: 4, btnIconSize: 16,
+            errorGap: 4, errorH: 14
         },
         // The theme switcher: a top row, a row of theme cards, and the count under it. The size
         // is fixed: h = padTop + searchH + listGap + rowH + footerH + padBottom.
