@@ -13,3 +13,5 @@ ClockText 1.0 ClockText.qml
 PasswordText 1.0 PasswordText.qml
 CopyText 1.0 CopyText.qml
 PasswordField 1.0 PasswordField.qml
+MoonToggle MoonToggle.qml
+MoonDropdown MoonDropdown.qml

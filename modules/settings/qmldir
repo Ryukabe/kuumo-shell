@@ -1,0 +1,12 @@
+singleton SettingsLayout SettingsLayout.qml
+singleton SettingsNav SettingsNav.qml
+singleton SettingsIndex SettingsIndex.qml
+SettingsWindow SettingsWindow.qml
+SettingsPage SettingsPage.qml
+SidebarItem SidebarItem.qml
+SearchField SearchField.qml
+SearchResults SearchResults.qml
+SearchResultRow SearchResultRow.qml
+
+SettingsCard SettingsCard.qml
+SettingsRow SettingsRow.qml

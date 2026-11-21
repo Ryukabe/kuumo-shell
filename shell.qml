@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import "." as Root
 import "core"
 import "modules/island"
+import "modules/settings"
 import "state"
 
 ShellRoot {
@@ -64,6 +65,8 @@ ShellRoot {
                 id: island
                 anchors.fill: parent
             }
+            
+            SettingsWindow {}
         }
     }
 }
