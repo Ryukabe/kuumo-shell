@@ -3,7 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../.." as Root
+
 
 // The clipboard history for the clipboard island.
 // The history itself is kept by cliphist (text and pictures). This service starts the

@@ -79,6 +79,13 @@ Singleton {
     property int wallpaperTransitionFps: 60
     // Width (px) of the still thumbnails made from animated wallpapers
     property int wallpaperThumbWidth: 320
+    // Dropping image files on the island adds them to the wallpapers (see WallpaperService)
+    property bool wallpaperDropEnabled: true
+    // With this on, the right half of the island adds the dropped files to every theme
+    property bool wallpaperDropAllThemes: true
+    // A dragged image must rest on the island this long (ms) before the switcher opens, so
+    // dragging past it by accident does nothing. 0 opens at once.
+    property int wallpaperDropOpenMs: 500
 
     // The clipboard island closes this long after a copy (ms), so "Copied" can be seen
     property int clipboardCopyCloseMs: 800

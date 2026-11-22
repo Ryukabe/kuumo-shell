@@ -279,6 +279,41 @@ Item {
             }
         }
 
+        DropArea {
+            id: wallpaperDrop
+            anchors.fill: parent
+
+            // The right half of the island adds to every theme (when that is on in Settings)
+            readonly property bool allThemes: Root.Config.wallpaperDropAllThemes && drag.x > width / 2
+
+            // Resting on the pill opens the switcher, so dragging past it by accident does nothing
+            Timer {
+                id: dwell
+                interval: Root.Config.wallpaperDropOpenMs
+                onTriggered: if (wallpaperDrop.containsDrag && !IslandState.wallpaper) IslandState.openWallpaper()
+            }
+
+            onEntered: drag => {
+                if (!Root.Config.wallpaperDropEnabled || !WallpaperService.hasImages(drag.urls)) {
+                    drag.accepted = false
+                    return
+                }
+                drag.accepted = true
+                if (IslandState.wallpaper) return
+                if (Root.Config.wallpaperDropOpenMs <= 0) IslandState.openWallpaper()
+                else dwell.restart()
+            }
+            onExited: dwell.stop()
+            onDropped: drop => {
+                dwell.stop()
+                // Always a copy, so the file manager never removes the original. A drop on the
+                // closed pill adds to the current theme; the halves only exist once it is open.
+                drop.accept(Qt.CopyAction)
+                WallpaperService.addFiles(drop.urls,
+                    IslandState.wallpaper && Root.Config.wallpaperDropAllThemes && drop.x > wallpaperDrop.width / 2)
+            }
+        }
+
         // Hover highlight behind the clock: shows that it can be tapped
         Rectangle {
             x: root.tapRect.x
@@ -445,6 +480,8 @@ Item {
             y: 0
             width: root.layouts.wallpaper.w
             height: root.layouts.wallpaper.h
+            dropping: wallpaperDrop.containsDrag
+            dropRight: wallpaperDrop.allThemes
         }
 
         // A notification, centered in the pill

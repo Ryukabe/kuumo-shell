@@ -101,4 +101,45 @@ SettingsPage {
             }
         }
     }
+    
+    SettingsCard {
+        title: "Adding wallpapers"
+
+        SettingsRow {
+            settingId: "appearance-wallpaper-drop"
+            title: "Add by dropping"
+            description: "Drag image files onto the island to copy them into the wallpapers folder and add them to the current theme."
+            keywords: "drag drop add import wallpaper folder"
+
+            MoonToggle {
+                checked: Root.Config.wallpaperDropEnabled
+                onToggled: value => SettingsState.set("wallpaperDropEnabled", value)
+            }
+        }
+
+        SettingsRow {
+            settingId: "appearance-wallpaper-drop-all"
+            title: "Right half adds to every theme"
+            description: "While dragging, the right half of the island adds the files to all themes, and the left half only to the current one."
+            keywords: "drag drop all themes every"
+
+            MoonToggle {
+                checked: Root.Config.wallpaperDropAllThemes
+                onToggled: value => SettingsState.set("wallpaperDropAllThemes", value)
+            }
+        }
+
+        SettingsRow {
+            settingId: "appearance-wallpaper-drop-delay"
+            title: "Open delay"
+            description: "How long a dragged image must rest on the island before the switcher opens. 0 opens at once."
+            keywords: "drag drop wait hover accidental delay"
+
+            SettingsSlider {
+                settingKey: "wallpaperDropOpenMs"
+                iconName: "timer"
+                from: 0; to: 1500; stepSize: 50; unit: "ms"
+            }
+        }
+    }
 }

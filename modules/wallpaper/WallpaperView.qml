@@ -21,6 +21,10 @@ Item {
     // Sizes from layouts.wallpaper in Island.qml, and how far the content has faded in (0..1)
     property var layout
     property real reveal: 0
+    // True while image files are dragged over the island (set by Island.qml)
+    property bool dropping: false
+    // Which half of the island the dragged files are over (the right half adds to every theme)
+    property bool dropRight: false
 
     opacity: reveal
     visible: reveal > 0
@@ -84,6 +88,11 @@ Item {
         } else if (event.key === Qt.Key_Escape) {
             if (searching) search.collapse()
             else IslandState.closeAll()
+            event.accepted = true
+        } else if (event.key === Qt.Key_Delete && !searching) {
+            // Delete takes a wallpaper you added out of this theme's list (the file stays)
+            const entry = WallpaperService.results[list.currentIndex]
+            if (entry) WallpaperService.removeAdded(entry.name)
             event.accepted = true
         } else if (!searching && plain && event.text.length > 0 && event.text >= " ") {
             // A letter typed while the search is closed opens it with that letter
@@ -316,5 +325,65 @@ Item {
         color: Theme.fgMuted
         font.family: Theme.fontText
         font.pixelSize: Theme.fontSizeXs
+    }
+
+    // While files are dragged over the island: a frame over the cards that says where they go.
+    // With "all themes" on in Settings it is two halves: the left adds to this theme, the right
+    // to every theme.
+    Item {
+        id: dropFrame
+        x: root.layout.padX
+        y: root.listTop
+        width: root.width - 2 * root.layout.padX
+        height: root.layout.rowH
+        opacity: root.dropping ? 1 : 0
+        visible: opacity > 0
+        Behavior on opacity {
+            NumberAnimation { duration: Motion.hoverFade; easing.type: Easing.OutCubic }
+        }
+
+        readonly property bool split: Root.Config.wallpaperDropAllThemes
+        readonly property color fill: Qt.rgba(Theme.bg.r, Theme.bg.g, Theme.bg.b, 0.88)
+
+        // The current theme (the whole frame when there is no split)
+        Rectangle {
+            x: 0
+            width: dropFrame.split ? dropFrame.width / 2 - 4 : dropFrame.width
+            height: parent.height
+            radius: root.layout.cardRadius
+            color: dropFrame.fill
+            border.width: root.layout.cardBorder
+            border.color: !dropFrame.split || !root.dropRight ? Theme.accent : Theme.border
+            Behavior on border.color { ColorAnimation { duration: Motion.hoverFade } }
+
+            Text {
+                anchors.centerIn: parent
+                text: !dropFrame.split && root.dropRight ? "Add to all themes" : "Add to " + Theme.active.name
+                color: Theme.fg
+                font.family: Theme.fontText
+                font.pixelSize: Theme.fontSizeSm
+            }
+        }
+
+        // Every theme
+        Rectangle {
+            visible: dropFrame.split
+            x: dropFrame.width / 2 + 4
+            width: dropFrame.width / 2 - 4
+            height: parent.height
+            radius: root.layout.cardRadius
+            color: dropFrame.fill
+            border.width: root.layout.cardBorder
+            border.color: root.dropRight ? Theme.accent : Theme.border
+            Behavior on border.color { ColorAnimation { duration: Motion.hoverFade } }
+
+            Text {
+                anchors.centerIn: parent
+                text: "Add to all themes"
+                color: Theme.fg
+                font.family: Theme.fontText
+                font.pixelSize: Theme.fontSizeSm
+            }
+        }
     }
 }
