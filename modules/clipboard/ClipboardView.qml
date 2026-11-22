@@ -39,11 +39,15 @@ Item {
         }
     }
 
-    // Closes the island after a copy, once "Copied" has been seen
+    // Closes the island after a copy, once "Copied" has been seen, and pastes if that is on
     Timer {
         id: closeTimer
         interval: Root.Config.clipboardCopyCloseMs
-        onTriggered: if (IslandState.clipboard) IslandState.closeAll()
+        onTriggered: {
+            if (!IslandState.clipboard) return
+            IslandState.closeAll()
+            if (Root.Config.clipboardAutoPaste) ClipboardService.pasteIntoPreviousWindow()
+        }
     }
 
     function highlighted() { return ClipboardService.rows[list.currentIndex] }

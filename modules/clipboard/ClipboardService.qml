@@ -1,7 +1,9 @@
 pragma Singleton
+
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "../.." as Root
 
 // The clipboard history for the clipboard island.
 // The history itself is kept by cliphist (text and pictures). This service starts the
@@ -234,6 +236,26 @@ Singleton {
     // The file of a picture, or "" while it is not ready
     function thumbPath(id) {
         return root.thumbVersion >= 0 && root.thumbs[id] === "ready" ? root.cacheDir + "/" + id : ""
+    }
+    
+    // ── Pasting ──
+    // Types Ctrl+V (Ctrl+Shift+V in a terminal) into the window that has the keyboard. It
+    // runs after the island has closed: the shell gives the keyboard back, and the script
+    // waits a moment for that. Needs wtype.
+    readonly property real pasteDelaySeconds: 0.15
+    readonly property string pasteScript: [
+        'sleep "$1"',
+        "cls=$(hyprctl activewindow | sed -n 's/^[[:space:]]*class: //p' | tr 'A-Z' 'a-z')",
+        'case "$cls" in',
+        "  kitty|foot|footclient|alacritty|konsole|org.kde.konsole|xterm|st|st-256color|terminator|tilix|xfce4-terminal|gnome-terminal-server|org.gnome.terminal|org.wezfurlong.wezterm|com.mitchellh.ghostty)",
+        "    wtype -M ctrl -M shift -k v -m shift -m ctrl ;;",
+        "  *)",
+        "    wtype -M ctrl -k v -m ctrl ;;",
+        "esac"
+    ].join("\n")
+
+    function pasteIntoPreviousWindow() {
+        Quickshell.execDetached(["sh", "-c", root.pasteScript, "sh", String(root.pasteDelaySeconds)])
     }
 
     // ── Actions ──

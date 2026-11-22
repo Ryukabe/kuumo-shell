@@ -176,17 +176,17 @@ Item {
     // panel (the width barely changes). The launcher and clipboard heights change with their
     // results, so height would make them flicker while typing. The OSD and the toast do not
     // give way to an OSD.
-    Reveal { id: extendedFade;  current: sw.value; startSize: layouts.idle.w;      endSize: layouts.extended.w;  active: IslandState.extended }
-    Reveal { id: controlFade;   current: sh.value; startSize: layouts.extended.h;  endSize: layouts.control.h;   active: IslandState.control }
-    Reveal { id: launcherFade;  current: sw.value; startSize: layouts.idle.w;      endSize: layouts.launcher.w;  active: IslandState.launcher }
-    Reveal { id: clipboardFade; current: sw.value; startSize: layouts.idle.w;      endSize: layouts.clipboard.w; active: IslandState.clipboard }
-    Reveal { id: powerFade;     current: sw.value; startSize: layouts.idle.w;      endSize: layouts.power.w;     active: IslandState.power }
-    Reveal { id: polkitFade;    current: sw.value; startSize: layouts.idle.w;      endSize: layouts.polkit.w;    active: IslandState.polkit }
-    Reveal { id: themeFade;     current: sw.value; startSize: layouts.idle.w;      endSize: layouts.theme.w;     active: IslandState.theme }
-    Reveal { id: wallpaperFade; current: sw.value; startSize: layouts.idle.w;      endSize: layouts.wallpaper.w; active: IslandState.wallpaper }
-    Reveal { id: osdFade;       current: sw.value; startSize: layouts.idle.w;      endSize: layouts.osd.w;       active: IslandState.osdActive; hideOnOsd: false }
-    Reveal { id: toastFade;     current: sw.value; startSize: layouts.idle.w;      endSize: layouts.toast.w;     active: root.toastVisible;     hideOnOsd: false }
-
+    Reveal { id: extendedFade;  current: sw.value; startSize: root.layouts.idle.w;     endSize: root.layouts.extended.w;  active: IslandState.extended }
+    Reveal { id: controlFade;   current: sh.value; startSize: root.layouts.extended.h; endSize: root.layouts.control.h;   active: IslandState.control }
+    Reveal { id: launcherFade;  current: sw.value; startSize: root.layouts.idle.w;     endSize: root.layouts.launcher.w;  active: IslandState.launcher }
+    Reveal { id: clipboardFade; current: sw.value; startSize: root.layouts.idle.w;     endSize: root.layouts.clipboard.w; active: IslandState.clipboard }
+    Reveal { id: powerFade;     current: sw.value; startSize: root.layouts.idle.w;     endSize: root.layouts.power.w;     active: IslandState.power }
+    Reveal { id: polkitFade;    current: sw.value; startSize: root.layouts.idle.w;     endSize: root.layouts.polkit.w;    active: IslandState.polkit }
+    Reveal { id: themeFade;     current: sw.value; startSize: root.layouts.idle.w;     endSize: root.layouts.theme.w;     active: IslandState.theme }
+    Reveal { id: wallpaperFade; current: sw.value; startSize: root.layouts.idle.w;     endSize: root.layouts.wallpaper.w; active: IslandState.wallpaper }
+    Reveal { id: osdFade;       current: sw.value; startSize: root.layouts.idle.w;     endSize: root.layouts.osd.w;       active: IslandState.osdActive; hideOnOsd: false }
+    Reveal { id: toastFade;     current: sw.value; startSize: root.layouts.idle.w;     endSize: root.layouts.toast.w;     active: root.toastVisible;         hideOnOsd: false }
+    
     // The numbers the views take as their `reveal`
     readonly property real reveal: extendedFade.value
     readonly property real ctlReveal: controlFade.value

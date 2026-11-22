@@ -82,6 +82,8 @@ Singleton {
 
     // The clipboard island closes this long after a copy (ms), so "Copied" can be seen
     property int clipboardCopyCloseMs: 800
+    // Clipboard island: after choosing an item, also paste it into the window you were in
+    property bool clipboardAutoPaste: true
 
     // The text effects (typing, backspace, iris, and the rolling clock are separate): off shows
     // the final text at once. Typing, backspace and iris follow this switch.
