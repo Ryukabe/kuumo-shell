@@ -3,14 +3,18 @@ import "../../styles"
 
 // One setting: an optional icon, a title with a short description, and the control on the
 // right. Whatever you put inside the row (a MoonToggle, a MoonDropdown, ...) is that control.
+// A row with a settingId is found by search on its own; no list needs updating.
 // Usage: SettingsRow { settingId: "halo"; title: "..."; description: "..."; MoonToggle { ... } }
 Item {
     id: root
 
-    // The id search uses to point at this row (it matches SettingsIndex's entry)
+    // The id search uses to point at this row. Without one the row is not searchable.
+    // It must be unique across all pages.
     property string settingId: ""
     property string title: ""
     property string description: ""
+    // Optional extra words that should find this row in the search ("shadow light")
+    property string keywords: ""
     // Optional Material Symbols name shown before the text
     property string icon: ""
 
@@ -18,12 +22,35 @@ Item {
 
     readonly property bool highlighted: root.settingId !== "" && SettingsNav.highlight === root.settingId
 
+    // The title of the SettingsCard this row sits in
+    function cardTitle() {
+        let item = root.parent
+        while (item) {
+            if (item.isCard) return item.title
+            item = item.parent
+        }
+        return ""
+    }
+
     width: parent ? parent.width : 0
     height: Math.max(SettingsLayout.rowH, texts.implicitHeight + 2 * SettingsLayout.rowPadY)
 
     // The page may open already pointing at this row, or the row may be pointed at later
     onHighlightedChanged: if (highlighted) flash.restart()
-    Component.onCompleted: if (highlighted) flash.restart()
+
+    Component.onCompleted: {
+        // While SettingsIndex builds the pages to collect their rows, report this one
+        if (SettingsIndex.scanning && root.settingId !== "") {
+            SettingsIndex.register({
+                id: root.settingId,
+                title: root.title,
+                description: root.description,
+                section: root.cardTitle(),
+                keywords: root.keywords
+            })
+        }
+        if (highlighted) flash.restart()
+    }
 
     // The line above the row (not on the first row of a card)
     Rectangle {

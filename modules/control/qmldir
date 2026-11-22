@@ -2,7 +2,6 @@ ControlView 1.0 ControlView.qml
 FocusIcon 1.0 FocusIcon.qml
 KdeConnectPage 1.0 KdeConnectPage.qml
 MoonButton 1.0 MoonButton.qml
-MoonSlider 1.0 MoonSlider.qml
 NetworkRow 1.0 NetworkRow.qml
 NightLightPage 1.0 NightLightPage.qml
 NotificationCard 1.0 NotificationCard.qml

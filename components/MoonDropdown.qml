@@ -74,15 +74,18 @@ Item {
         onClicked: popup.opened ? popup.close() : popup.open()
     }
 
-    Popup {
+        Popup {
         id: popup
 
         // Decided each time the popup opens: true when it should appear above the button
         property bool openUp: false
+        readonly property real fullHeight: root.options.length * root.optionHeight + 2 * root.borderWidth
+        // The tallest the list may be; set on open from the room on the chosen side
+        property real maxHeight: popup.fullHeight
 
         parent: root
         width: root.width
-        height: root.options.length * root.optionHeight + 2 * root.borderWidth
+        height: Math.min(popup.fullHeight, popup.maxHeight)
         y: popup.openUp ? -popup.height - root.gap : root.height + root.gap
         padding: 0
         // Pressing the button itself must not count as "outside", or it would close and reopen
@@ -92,12 +95,15 @@ Item {
             const win = root.Window.window
             if (!win) {
                 popup.openUp = false
+                popup.maxHeight = popup.fullHeight
                 return
             }
             const top = root.mapToItem(null, 0, 0).y
-            const spaceBelow = win.height - (top + root.height) - root.gap
-            const spaceAbove = top - root.gap
-            popup.openUp = spaceBelow < popup.height && spaceAbove > spaceBelow
+            const spaceBelow = win.height - (top + root.height) - root.gap - 8
+            const spaceAbove = top - root.gap - 8
+            popup.openUp = spaceBelow < popup.fullHeight && spaceAbove > spaceBelow
+            const room = popup.openUp ? spaceAbove : spaceBelow
+            popup.maxHeight = Math.max(room, 3 * root.optionHeight)
         }
 
         enter: Transition {
@@ -114,62 +120,69 @@ Item {
             border.color: Theme.border
         }
 
-        contentItem: Column {
-            Repeater {
-                model: root.options
+        contentItem: MoonFlickable {
+            contentHeight: optionList.height
 
-                delegate: Item {
-                    id: option
-                    required property var modelData
+            Column {
+                id: optionList
+                width: root.width
 
-                    readonly property bool selected: option.modelData.value === root.value
+                Repeater {
+                    model: root.options
 
-                    width: root.width
-                    height: root.optionHeight
+                    delegate: Item {
+                        id: option
+                        required property var modelData
 
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: Theme.radiusSmall
-                        color: Theme.subBg
-                        opacity: optionMouse.containsMouse ? 1 : 0
-                        Behavior on opacity {
-                            NumberAnimation { duration: Motion.hoverFade; easing.type: Easing.OutCubic }
+                        readonly property bool selected: option.modelData.value === root.value
+
+                        width: root.width
+                        height: root.optionHeight
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Theme.radiusSmall
+                            color: Theme.subBg
+                            opacity: optionMouse.containsMouse ? 1 : 0
+                            Behavior on opacity {
+                                NumberAnimation { duration: Motion.hoverFade; easing.type: Easing.OutCubic }
+                            }
                         }
-                    }
 
-                    Text {
-                        anchors.left: parent.left
-                        anchors.leftMargin: root.padX
-                        anchors.right: check.left
-                        anchors.rightMargin: root.padX
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: option.modelData.label
-                        color: Theme.fg
-                        font.family: Theme.fontText
-                        font.pixelSize: Theme.fontSizeSm
-                        elide: Text.ElideRight
-                    }
+                        Text {
+                            anchors.left: parent.left
+                            anchors.leftMargin: root.padX
+                            anchors.right: check.left
+                            anchors.rightMargin: root.padX
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: option.modelData.label
+                            color: Theme.fg
+                            font.family: Theme.fontText
+                            font.pixelSize: Theme.fontSizeSm
+                            elide: Text.ElideRight
+                        }
 
-                    Text {
-                        id: check
-                        anchors.right: parent.right
-                        anchors.rightMargin: root.padX
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "check"
-                        color: Theme.fg
-                        font.family: Theme.fontIcon
-                        font.pixelSize: Theme.fontSizeLg
-                        visible: option.selected
-                    }
+                        Text {
+                            id: check
+                            anchors.right: parent.right
+                            anchors.rightMargin: root.padX
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "check"
+                            color: Theme.fg
+                            font.family: Theme.fontIcon
+                            font.pixelSize: Theme.fontSizeLg
+                            visible: option.selected
+                        }
 
-                    MouseArea {
-                        id: optionMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.picked(option.modelData.value)
-                            popup.close()
+                        MouseArea {
+                            id: optionMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.picked(option.modelData.value)
+                                popup.close()
+                            }
                         }
                     }
                 }

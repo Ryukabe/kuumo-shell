@@ -3,16 +3,55 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// Everything the search can find: every page, and every setting listed below.
+// Everything the search can find: every page, and every setting row with a settingId.
+// The rows are not listed here. The first time Settings opens, scan() builds each page once,
+// off screen, and every SettingsRow reports itself through register(). The pages are then
+// thrown away; only the list stays.
 Singleton {
     id: root
 
-    // One line for every setting you build, so search can find it:
-    // { id: "halo", title: "Moonlight halo", page: "island", section: "Glow", keywords: "shadow light" }
-    // `page` is a page id from SettingsNav; `id` is what the row compares with SettingsNav.highlight.
-    readonly property var settings: [
-        { id: "island-halo", title: "Moonlight halo", page: "island", section: "Glow", keywords: "shadow light moon glow" }
-    ]
+    // Filled by scan(): { id, title, description, page, section, keywords } for each row
+    property var settings: []
+
+    // True only while scan() is building the pages; SettingsRow checks it
+    property bool scanning: false
+    property bool scanned: false
+
+    // Used during a scan
+    property string scanPage: ""
+    property var collector: []
+
+    // Called by a SettingsRow while a scan runs
+    function register(entry) {
+        if (root.collector.some(e => e.id === entry.id)) {
+            console.warn("SettingsIndex: the setting id \"" + entry.id + "\" is used by more than one row")
+            return
+        }
+        root.collector.push(Object.assign({ page: root.scanPage }, entry))
+    }
+
+    // Build every page once and collect its rows. Safe to call again: it only runs once.
+    function scan() {
+        if (root.scanned) return
+        root.scanned = true
+        root.collector = []
+        root.scanning = true
+
+        for (const page of SettingsNav.pages) {
+            const component = Qt.createComponent(SettingsNav.pagesDir + page.file)
+            if (component.status !== Component.Ready) {
+                console.warn("SettingsIndex: could not read " + page.file + ": " + component.errorString())
+                continue
+            }
+            root.scanPage = page.id
+            const instance = component.createObject(null)
+            if (instance) instance.destroy()
+        }
+
+        root.scanning = false
+        root.scanPage = ""
+        root.settings = root.collector
+    }
 
     // The pages first, then the settings: { id, title, page, subtitle, keywords, icon }
     readonly property var entries: {
@@ -25,7 +64,7 @@ Singleton {
             return {
                 id: s.id, title: s.title, page: s.page,
                 subtitle: (owner ? owner.title : "") + (s.section ? " › " + s.section : ""),
-                keywords: s.keywords ?? "",
+                keywords: ((s.keywords ?? "") + " " + (s.description ?? "")).trim(),
                 icon: owner ? owner.icon : "settings"
             }
         })

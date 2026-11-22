@@ -2,8 +2,9 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import QtQuick.Controls.Basic
+import QtQuick.Controls.Basic as Controls
 import "../../styles"
+import "../../components"
 
 // The Settings window: a normal floating window with the sidebar on the left and the open
 // page on the right. Esc closes it, Ctrl+F searches. SettingsNav says whether it is open
@@ -19,8 +20,12 @@ FloatingWindow {
     implicitHeight: SettingsLayout.windowH
     minimumSize: Qt.size(SettingsLayout.minW, SettingsLayout.minH)
 
-    // Closed from outside (by the compositor): keep SettingsNav in step
-    onVisibleChanged: if (!visible) SettingsNav.open = false
+    // The first time the window opens, collect every setting row for the search.
+    // Closed from outside (by the compositor): keep SettingsNav in step.
+    onVisibleChanged: {
+        if (visible) SettingsIndex.scan()
+        else SettingsNav.open = false
+    }
 
     // Apply the saved settings now, so they hold even if this window is never opened
     Component.onCompleted: SettingsState.start()
@@ -74,43 +79,22 @@ FloatingWindow {
             }
 
             // The pages, while nothing is typed. Scrolls when the window is too short for them all.
-            Flickable {
+            MoonFlickable {
                 id: pagesFlick
                 anchors.top: search.bottom
                 anchors.topMargin: SettingsLayout.sidebarPad
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: SettingsLayout.sidebarPad
                 anchors.left: parent.left
-                anchors.right: parent.right
                 anchors.leftMargin: SettingsLayout.sidebarPad
-                anchors.rightMargin: SettingsLayout.sidebarPad
+                anchors.right: parent.right
                 visible: search.text === ""
-                clip: true
-                boundsBehavior: Flickable.StopAtBounds
-                contentWidth: width
                 contentHeight: pagesColumn.height
-
-                ScrollBar.vertical: ScrollBar {
-                    id: pagesBar
-                    policy: ScrollBar.AsNeeded
-                    minimumSize: 0.1
-                    padding: 2
-
-                    contentItem: Rectangle {
-                        implicitWidth: 5
-                        radius: width / 2
-                        color: Theme.fgMuted
-                        opacity: pagesBar.pressed ? 0.8 : (pagesBar.hovered || pagesBar.active) ? 0.5 : 0.2
-                        Behavior on opacity {
-                            NumberAnimation { duration: Motion.hoverFade; easing.type: Easing.OutCubic }
-                        }
-                    }
-                    background: Item {}
-                }
 
                 Column {
                     id: pagesColumn
-                    width: pagesFlick.width
+                    // Leaves the right gutter free for the scrollbar
+                    width: pagesFlick.width - SettingsLayout.sidebarPad
                     spacing: SettingsLayout.itemGap
 
                     Repeater {

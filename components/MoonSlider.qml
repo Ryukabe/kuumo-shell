@@ -1,9 +1,8 @@
 import QtQuick
 import QtQuick.Shapes
-import "../.." as Root
-import "../../components"
-import "../../styles"
-import "../../state"
+import ".." as Root
+import "../styles"
+import "../state"
 
 // A slider drawn like the OSD: icon on the left, a track with a moon on it, a value on the right.
 // It only shows a level and reports where the user dragged, tapped or stepped; it never sets

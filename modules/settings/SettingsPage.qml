@@ -1,4 +1,5 @@
 import QtQuick
+import "../../components"
 import "../../styles"
 
 // The base of every settings page: the page title, then the page's content, scrolling when
@@ -10,12 +11,8 @@ Item {
 
     default property alias content: body.data
 
-    Flickable {
-        id: flick
+    MoonFlickable {
         anchors.fill: parent
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-        contentWidth: width
         contentHeight: body.y + body.height + SettingsLayout.pagePad
 
         Text {
@@ -33,7 +30,7 @@ Item {
             id: body
             x: SettingsLayout.pagePad
             y: heading.y + heading.height + SettingsLayout.sectionGap
-            width: flick.width - 2 * SettingsLayout.pagePad
+            width: root.width - 2 * SettingsLayout.pagePad
             spacing: SettingsLayout.sectionGap
         }
     }

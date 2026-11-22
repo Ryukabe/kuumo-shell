@@ -34,4 +34,10 @@ Singleton {
     readonly property int flashFadeMs: 900
     // How visible the highlight is when the pointer is over a sidebar entry
     readonly property real hoverOpacity: 0.5
+    // A slider inside a settings row: its width, and the sizes MoonSlider reads from `layout`
+    readonly property int sliderW: 260
+    readonly property var sliderLayout: ({
+        rowH: 28, iconSize: 18, iconGap: 10, pctGap: 10, pctW: 64,
+        dotSize: 14, barH: 4, glowReach: 16, btnBorder: 1
+    })
 }

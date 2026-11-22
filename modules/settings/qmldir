@@ -13,3 +13,4 @@ SearchResultRow SearchResultRow.qml
 
 SettingsCard SettingsCard.qml
 SettingsRow SettingsRow.qml
+SettingsSlider SettingsSlider.qml

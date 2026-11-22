@@ -15,3 +15,6 @@ CopyText 1.0 CopyText.qml
 PasswordField 1.0 PasswordField.qml
 MoonToggle MoonToggle.qml
 MoonDropdown MoonDropdown.qml
+MoonScrollBar MoonScrollBar.qml
+MoonFlickable MoonFlickable.qml
+MoonSlider 1.0 MoonSlider.qml

@@ -1,4 +1,5 @@
 import QtQuick
+import "../../components"
 import "../../styles"
 import "../../state"
 import "../display"

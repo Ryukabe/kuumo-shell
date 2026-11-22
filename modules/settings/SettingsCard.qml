@@ -8,6 +8,9 @@ Item {
 
     property string title: ""
 
+    // Lets a row find the card it is in (see SettingsRow.cardTitle)
+    readonly property bool isCard: true
+
     default property alias rows: column.data
 
     width: parent ? parent.width : 0
