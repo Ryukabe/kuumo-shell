@@ -1,1 +1,3 @@
 Island 1.0 Island.qml
+singleton IslandLayouts 1.0 IslandLayouts.qml
+Reveal 1.0 Reveal.qml

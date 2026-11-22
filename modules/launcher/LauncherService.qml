@@ -1,6 +1,8 @@
 pragma Singleton
+
 import QtQuick
 import Quickshell
+import "../.." as Root
 import "CalcEngine.js" as Calc
 import "EmojiData.js" as Emoji
 import "../../state"
@@ -40,10 +42,14 @@ Singleton {
     signal fillRequested(string text)
 
     // The calculator or conversion answer for the typed text, or null
-    readonly property var calc: Calc.evaluate(root.query, RatesService.rates, RatesService.fetchedAt)
+    readonly property var calc: Root.Config.launcherCalculator
+        ? Calc.evaluate(root.query, RatesService.rates, RatesService.fetchedAt)
+        : null
 
     // Conversions to pick while typing a number or a unit
-    readonly property var suggestions: Calc.suggest(root.query, RatesService.rates, RatesService.fetchedAt)
+    readonly property var suggestions: Root.Config.launcherSuggestions
+        ? Calc.suggest(root.query, RatesService.rates, RatesService.fetchedAt)
+        : []
 
     // The rows of the list. Each one is { kind: "calc" | "suggest" | "app" | "command" | "note" | "emoji",
     // name, sub, symbol (icon-font name, not for apps), icon (an app's icon), entry, copy, fill,

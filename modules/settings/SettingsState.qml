@@ -20,7 +20,13 @@ Singleton {
         "osdVolumeStep", "osdVolumeMax", "osdBrightnessStep",
         "mediaScrollUpIsNext", "mediaDividerBreathes", "mediaDividerSurges", "mediaTrackAnimation",
         "notificationToastMs", "clipboardCopyCloseMs",
-        "typewriter", "polkitShake"
+        "typewriter", "polkitShake",
+        "wallpaperTransition", "wallpaperPreviewTransition", "wallpaperTransitionSeconds",
+        "wallpaperTransitionFps", "switcherPreviewDelayMs",
+        "launcherCalculator", "launcherSuggestions", "launcherMaxRows",
+        "sliderStep", "sliderLargeStep",
+        "nightLightMinK", "nightLightMaxK", "nightLightDefaultK", "nightLightStepK",
+        "nightLightMinGamma", "nightLightMaxGamma"
     ]
 
     // The values Config.qml starts with, kept so a setting can go back to them

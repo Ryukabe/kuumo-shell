@@ -36,142 +36,8 @@ Item {
     // Padding around the clock (and date) for the area you tap
     readonly property int tapPad: 6
 
-    // Widths are even so the settled island sits on whole pixels.
-    readonly property var layouts: ({
-        idle:     { w: 124, h: 32,  clockSize: 12 },
-        extended: {
-            w: 436, h: 100, clockSize: 24, padX: 22, dateGap: 2,
-            // Music side: art on the right, track info to its left, divider below
-            mediaW: 190, artSize: 32, artGap: 10, artRadius: 6, iconSize: 12,
-            textSlide: 8,
-            dividerGap: 12, dividerH: 2, dividerGlow: 12,
-            // Workspace dots under the divider
-            dotsGap: 8, dotSize: 6, dotActiveW: 16, dotGap: 6, dotHit: 4
-        },
-        control: {
-            w: 312, h: 380, clockSize: 12, padX: 16,
-            // clockCenterY: how far below the top edge the small clock's middle sits
-            clockCenterY: 16,
-            // Content of the main page: below the clock, first a row of round buttons,
-            // then the sliders, then the notifications card. contentBottom is the space
-            // kept free under any page.
-            contentTop: 48, contentBottom: 16, sectionGap: 20,
-            // The other pages (Wi-Fi list, Night Light, KDE Connect, notifications) have no
-            // clock, so they start higher
-            pageTop: 12,
-            // Round buttons: one slot each, side by side, label underneath
-            tileSlots: 4, btnSize: 52, btnBorder: 1, btnGlowReach: 16, tileIconSize: 24, labelGap: 6,
-            // Slider rows (volume, brightness): icon, bar with a moon at the end of its fill,
-            // percentage on the right
-            rowH: 32, rowGap: 12,
-            iconSize: 20, iconGap: 12, barH: 4, dotSize: 8, glowReach: 14,
-            pctW: 40, pctGap: 12,
-            // Changing page: how far the pages slide while fading
-            pageSlide: 14,
-            // The page header, then (Wi-Fi list) one row per network
-            headerH: 32, headerIconSize: 20,
-            netRowH: 48, netRowGap: 4, netPad: 12, netIconSize: 20, netIconGap: 12, netLockSize: 14,
-            // The buttons and password field that open under a network (also the action
-            // buttons of the KDE Connect page)
-            netActionH: 28, netActionGap: 8, netActionPad: 14,
-            // The notifications card (bell, pulsing dot) and the rows of the notifications list
-            cardH: 64, cardIconSize: 24, bellDot: 8,
-            noteRowH: 64, noteIconSize: 36, noteIconGap: 12, noteIconRadius: 8, noteCloseSize: 18,
-            // The phone's battery ring on the KDE Connect page
-            phoneIconSize: 56
-        },
-        // Search field on top, one row per matching app below. The height is not here:
-        // it grows with the number of results (see launcherLayout).
-        launcher: {
-            w: 436, clockSize: 12, padX: 16, padTop: 12, padBottom: 12,
-            // Search field and the gap above the list
-            searchH: 32, fontSize: 15, listGap: 8,
-            // Result rows: at most maxRows show, then the list scrolls
-            maxRows: 6, rowH: 40, rowPad: 12, iconSize: 24, iconGap: 12,
-            // The emoji picker: a grid of emojiCols columns and at most emojiRows rows of
-            // square cells, and a line under it with the name of the emoji you are on
-            emojiCols: 9, emojiRows: 4, emojiCell: 44, emojiSize: 26, emojiCaptionH: 28
-        },
-        // The clipboard history: search field on top, one row per item below. The height
-        // is not here either (see clipboardLayout).
-        clipboard: {
-            w: 436, clockSize: 12, padX: 16, padTop: 12, padBottom: 12,
-            searchH: 32, fontSize: 15, listGap: 8,
-            // Rows: at most maxRows show, then the list scrolls. A row has a square on the
-            // left (the picture of an image, else an icon), the preview of up to previewLines
-            // lines with the size and age under it, and the pin and delete buttons on the right.
-            maxRows: 5, rowH: 60, rowPad: 12, thumb: 40, iconSize: 24, iconGap: 12,
-            previewFont: 13, previewLines: 2, actionSize: 20, actionGap: 8
-        },
-        // The power menu: one row of round buttons, `slots` of them across the width, each
-        // with its label underneath. h = padTop + btnSize + labelGap + the label's height
-        // (about 14) + padBottom. The ring of a hold button is holdRingW wide.
-        power: {
-            w: 436, h: 112, clockSize: 12, padX: 22, padTop: 20,
-            slots: 5, btnSize: 52, btnBorder: 1, btnGlowReach: 16, tileIconSize: 24, labelGap: 6,
-            holdRingW: 3
-        },
-        // The polkit prompt, top to bottom: a header row (round icon and title on the left,
-        // the user pill in the right corner), the message (up to two lines), the password
-        // field, and a line for a wrong password. The size is fixed:
-        // h = padTop + headH + msgGap + msgH + fieldGap + fieldH + errorGap + errorH + padBottom.
-        //  - Header: the icon ring is headH wide and tall; the pill is pillH tall, with pillPad
-        //    at its sides and pillGap between its icon and the name.
-        //  - Field: fieldGap is the space above it; inside it a lock icon (caps lock symbol
-        //    while caps lock is on), the password, and at the right the Authenticate button,
-        //    authW wide once you type, btnInset away from the field's edge. innerGap is the
-        //    space between those parts. ringW is the line width of the rings and the border.
-        polkit: {
-            w: 400, h: 186, clockSize: 12, padX: 20, padTop: 18, padBottom: 16,
-            headH: 30, iconSize: 16, iconGap: 10, ringW: 1,
-            pillH: 26, pillPad: 10, pillGap: 6, pillIconSize: 14,
-            msgGap: 10, msgH: 40,
-            fieldGap: 14, fieldH: 40, fieldPad: 12, innerGap: 10, capsSize: 16,
-            authW: 32, btnInset: 4, btnIconSize: 16,
-            errorGap: 4, errorH: 14
-        },
-        // The theme switcher: a top row, a row of theme cards, and the count under it. The size
-        // is fixed: h = padTop + searchH + listGap + rowH + footerH + padBottom.
-        //  - Top row: the island's clock at the far left (clockCenterY = padTop + searchH / 2 is
-        //    where its middle sits, clockSlotW the room kept for it), then the theme name, and in
-        //    the right corner the search pill: searchH wide closed, searchExpandedW open, pulling
-        //    out to the left. gap is the space between the items of the row.
-        //  - Cards: cardW x cardH, growing by selectedScale when highlighted (keep both whole
-        //    pixels). rowH = the grown card plus 8 above and below it, so the row's clip never
-        //    touches a card. The dots and the name sit on a shade shadeH tall along the card's
-        //    bottom edge; appliedDot marks the saved theme.
-        theme: {
-            w: 600, h: 200, clockSize: 12, padX: 16, padTop: 12, padBottom: 8,
-            clockCenterY: 28, clockSlotW: 44, gap: 10,
-            searchH: 32, searchExpandedW: 220, fontSize: 15, listGap: 8,
-            rowH: 116, footerH: 24,
-            cardW: 128, cardH: 80, cardGap: 24, cardRadius: 12, cardBorder: 1, selectedScale: 1.25,
-            cardPad: 10, cardTextGap: 5, shadeH: 52, dotSize: 7, dotGap: 5,
-            appliedDot: 7, appliedInset: 10
-        },
-        // The wallpaper switcher: the same island as the theme switcher (see there), plus the
-        // Static / Animated switch between the theme name and the pill: toggleW x toggleH, its
-        // highlight toggleInset inside it. The cards show only their name (no dots).
-        wallpaper: {
-            w: 600, h: 200, clockSize: 12, padX: 16, padTop: 12, padBottom: 8,
-            clockCenterY: 28, clockSlotW: 44, gap: 10,
-            searchH: 32, searchExpandedW: 220, fontSize: 15, listGap: 8,
-            rowH: 116, footerH: 24,
-            cardW: 128, cardH: 80, cardGap: 24, cardRadius: 12, cardBorder: 1, selectedScale: 1.25,
-            cardPad: 10, shadeH: 52, appliedDot: 7, appliedInset: 10,
-            toggleW: 148, toggleH: 26, toggleInset: 3
-        },
-        // Volume / brightness: icon on the left, bar with a moon at the end of its fill
-        osd: {
-            w: 240, h: 44, clockSize: 12, padX: 16,
-            iconSize: 20, iconGap: 12, barH: 4, dotSize: 8, glowReach: 14
-        },
-        // A notification: app icon on the left, then app name, title and the first line of the text
-        toast: {
-            w: 380, h: 80, clockSize: 12, padX: 16,
-            iconSize: 36, iconRadius: 8, iconGap: 12
-        }
-    })
+    // The sizes of every mode are in IslandLayouts.qml
+    readonly property var layouts: IslandLayouts.all
 
     // A toast shows only while the island is at rest (not while a panel is open or an OSD shows)
     readonly property bool toastVisible: NotificationService.toastActive
@@ -235,8 +101,6 @@ Item {
     readonly property bool inSwitcher: IslandState.theme || IslandState.wallpaper
     readonly property var switcherLayout: IslandState.wallpaper ? layouts.wallpaper : layouts.theme
     readonly property real swClockScale: switcherLayout.clockSize / fullClockSize
-
-    function clamp01(v) { return Math.max(0, Math.min(1, v)) }
 
     // The clock fades out during an OSD, a toast, the launcher, the clipboard, the power
     // menu and the polkit prompt, and on the control center's other pages (Wi-Fi list, Night
@@ -306,168 +170,34 @@ Item {
         sw.snap(); sh.snap(); sx.snap(); sy.snap(); ss.snap()
     }
 
-    // How far the pill has grown from idle to extended (0..1), read from the width
-    // spring so everything that fades in stays in step with the morph
-    readonly property real growth: clamp01(
-        (sw.value - layouts.idle.w) / (layouts.extended.w - layouts.idle.w))
+    // ── How far each mode's content has appeared (see Reveal.qml) ──
+    // Most are measured by width, from idle to the mode's own width. The control center is
+    // measured by height, from the extended height, because it always opens from the extended
+    // panel (the width barely changes). The launcher and clipboard heights change with their
+    // results, so height would make them flicker while typing. The OSD and the toast do not
+    // give way to an OSD.
+    Reveal { id: extendedFade;  current: sw.value; startSize: layouts.idle.w;      endSize: layouts.extended.w;  active: IslandState.extended }
+    Reveal { id: controlFade;   current: sh.value; startSize: layouts.extended.h;  endSize: layouts.control.h;   active: IslandState.control }
+    Reveal { id: launcherFade;  current: sw.value; startSize: layouts.idle.w;      endSize: layouts.launcher.w;  active: IslandState.launcher }
+    Reveal { id: clipboardFade; current: sw.value; startSize: layouts.idle.w;      endSize: layouts.clipboard.w; active: IslandState.clipboard }
+    Reveal { id: powerFade;     current: sw.value; startSize: layouts.idle.w;      endSize: layouts.power.w;     active: IslandState.power }
+    Reveal { id: polkitFade;    current: sw.value; startSize: layouts.idle.w;      endSize: layouts.polkit.w;    active: IslandState.polkit }
+    Reveal { id: themeFade;     current: sw.value; startSize: layouts.idle.w;      endSize: layouts.theme.w;     active: IslandState.theme }
+    Reveal { id: wallpaperFade; current: sw.value; startSize: layouts.idle.w;      endSize: layouts.wallpaper.w; active: IslandState.wallpaper }
+    Reveal { id: osdFade;       current: sw.value; startSize: layouts.idle.w;      endSize: layouts.osd.w;       active: IslandState.osdActive; hideOnOsd: false }
+    Reveal { id: toastFade;     current: sw.value; startSize: layouts.idle.w;      endSize: layouts.toast.w;     active: root.toastVisible;     hideOnOsd: false }
 
-    // The extended content appears over the later part of the growth
-    readonly property real revealed: clamp01(
-        (growth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
-
-    // Leaving extended (collapse, control center or an OSD) hides it fast
-    property real shown: IslandState.extended && !IslandState.osdActive ? 1 : 0
-    Behavior on shown {
-        NumberAnimation {
-            duration: root.shown > 0 || IslandState.osdActive || !IslandState.extended ? Motion.fadeOut : 0
-            easing.type: Easing.OutCubic
-        }
-    }
-
-    readonly property real reveal: revealed * shown
-
-    // The OSD content appears the same way, measured against the OSD's own size
-    readonly property real osdGrowth: clamp01(
-        (sw.value - layouts.idle.w) / (layouts.osd.w - layouts.idle.w))
-    readonly property real osdRevealed: clamp01(
-        (osdGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
-    property real osdShown: IslandState.osdActive ? 1 : 0
-    Behavior on osdShown {
-        NumberAnimation {
-            duration: IslandState.osdActive ? 0 : Motion.fadeOut
-            easing.type: Easing.OutCubic
-        }
-    }
-    readonly property real osdReveal: osdRevealed * osdShown
-
-    // The toast content appears the same way, measured against the toast's own size
-    readonly property real toastGrowth: clamp01(
-        (sw.value - layouts.idle.w) / (layouts.toast.w - layouts.idle.w))
-    readonly property real toastRevealed: clamp01(
-        (toastGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
-    property real toastShown: toastVisible ? 1 : 0
-    Behavior on toastShown {
-        NumberAnimation {
-            duration: root.toastVisible ? 0 : Motion.fadeOut
-            easing.type: Easing.OutCubic
-        }
-    }
-    readonly property real toastReveal: toastRevealed * toastShown
-
-    // The control center content appears the same way. It is measured by height,
-    // from the extended height to the control height, because the control center
-    // always opens from the extended panel (the width barely changes).
-    readonly property real ctlGrowth: clamp01(
-        (sh.value - layouts.extended.h) / (layouts.control.h - layouts.extended.h))
-    readonly property real ctlRevealed: clamp01(
-        (ctlGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
-
-    // Leaving the control center (going back or an OSD) hides it fast
-    property real ctlShown: IslandState.control && !IslandState.osdActive ? 1 : 0
-    Behavior on ctlShown {
-        NumberAnimation {
-            duration: root.ctlShown > 0 || IslandState.osdActive || !IslandState.control ? Motion.fadeOut : 0
-            easing.type: Easing.OutCubic
-        }
-    }
-    readonly property real ctlReveal: ctlRevealed * ctlShown
-
-    // The launcher content appears measured by width, from idle to the launcher width.
-    // Its height changes with the results, so height would make it flicker while typing.
-    readonly property real launcherGrowth: clamp01(
-        (sw.value - layouts.idle.w) / (layouts.launcher.w - layouts.idle.w))
-    readonly property real launcherRevealed: clamp01(
-        (launcherGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
-
-    // Leaving the launcher (closing or an OSD) hides it fast
-    property real launcherShown: IslandState.launcher && !IslandState.osdActive ? 1 : 0
-    Behavior on launcherShown {
-        NumberAnimation {
-            duration: root.launcherShown > 0 || IslandState.osdActive || !IslandState.launcher ? Motion.fadeOut : 0
-            easing.type: Easing.OutCubic
-        }
-    }
-    readonly property real launcherReveal: launcherRevealed * launcherShown
-
-    // The clipboard content appears the same way as the launcher's, measured by width
-    readonly property real clipboardGrowth: clamp01(
-        (sw.value - layouts.idle.w) / (layouts.clipboard.w - layouts.idle.w))
-    readonly property real clipboardRevealed: clamp01(
-        (clipboardGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
-
-    // Leaving the clipboard (closing or an OSD) hides it fast
-    property real clipboardShown: IslandState.clipboard && !IslandState.osdActive ? 1 : 0
-    Behavior on clipboardShown {
-        NumberAnimation {
-            duration: root.clipboardShown > 0 || IslandState.osdActive || !IslandState.clipboard ? Motion.fadeOut : 0
-            easing.type: Easing.OutCubic
-        }
-    }
-    readonly property real clipboardReveal: clipboardRevealed * clipboardShown
-
-    // The power menu content appears the same way, measured by width
-    readonly property real powerGrowth: clamp01(
-        (sw.value - layouts.idle.w) / (layouts.power.w - layouts.idle.w))
-    readonly property real powerRevealed: clamp01(
-        (powerGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
-
-    // Leaving the power menu (closing or an OSD) hides it fast
-    property real powerShown: IslandState.power && !IslandState.osdActive ? 1 : 0
-    Behavior on powerShown {
-        NumberAnimation {
-            duration: root.powerShown > 0 || IslandState.osdActive || !IslandState.power ? Motion.fadeOut : 0
-            easing.type: Easing.OutCubic
-        }
-    }
-    readonly property real powerReveal: powerRevealed * powerShown
-
-    // The polkit prompt content appears the same way, measured by width
-    readonly property real polkitGrowth: clamp01(
-        (sw.value - layouts.idle.w) / (layouts.polkit.w - layouts.idle.w))
-    readonly property real polkitRevealed: clamp01(
-        (polkitGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
-
-    // Leaving the polkit prompt (closing or an OSD) hides it fast
-    property real polkitShown: IslandState.polkit && !IslandState.osdActive ? 1 : 0
-    Behavior on polkitShown {
-        NumberAnimation {
-            duration: root.polkitShown > 0 || IslandState.osdActive || !IslandState.polkit ? Motion.fadeOut : 0
-            easing.type: Easing.OutCubic
-        }
-    }
-    readonly property real polkitReveal: polkitRevealed * polkitShown
-
-    // The theme switcher content appears the same way, measured by width
-    readonly property real themeGrowth: clamp01(
-        (sw.value - layouts.idle.w) / (layouts.theme.w - layouts.idle.w))
-    readonly property real themeRevealed: clamp01(
-        (themeGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
-
-    // Leaving the theme switcher (closing or an OSD) hides it fast
-    property real themeShown: IslandState.theme && !IslandState.osdActive ? 1 : 0
-    Behavior on themeShown {
-        NumberAnimation {
-            duration: root.themeShown > 0 || IslandState.osdActive || !IslandState.theme ? Motion.fadeOut : 0
-            easing.type: Easing.OutCubic
-        }
-    }
-    readonly property real themeReveal: themeRevealed * themeShown
-
-    // The wallpaper switcher content appears the same way, measured by width
-    readonly property real wallpaperGrowth: clamp01(
-        (sw.value - layouts.idle.w) / (layouts.wallpaper.w - layouts.idle.w))
-    readonly property real wallpaperRevealed: clamp01(
-        (wallpaperGrowth - Motion.revealStart) / (Motion.revealEnd - Motion.revealStart))
-
-    // Leaving the wallpaper switcher (closing or an OSD) hides it fast
-    property real wallpaperShown: IslandState.wallpaper && !IslandState.osdActive ? 1 : 0
-    Behavior on wallpaperShown {
-        NumberAnimation {
-            duration: root.wallpaperShown > 0 || IslandState.osdActive || !IslandState.wallpaper ? Motion.fadeOut : 0
-            easing.type: Easing.OutCubic
-        }
-    }
-    readonly property real wallpaperReveal: wallpaperRevealed * wallpaperShown
+    // The numbers the views take as their `reveal`
+    readonly property real reveal: extendedFade.value
+    readonly property real ctlReveal: controlFade.value
+    readonly property real launcherReveal: launcherFade.value
+    readonly property real clipboardReveal: clipboardFade.value
+    readonly property real powerReveal: powerFade.value
+    readonly property real polkitReveal: polkitFade.value
+    readonly property real themeReveal: themeFade.value
+    readonly property real wallpaperReveal: wallpaperFade.value
+    readonly property real osdReveal: osdFade.value
+    readonly property real toastReveal: toastFade.value
 
     // ── Opening and closing by hover ──
     // Hovering the island opens the extended panel after a short delay; leaving it closes

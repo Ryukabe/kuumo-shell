@@ -17,8 +17,6 @@ Item {
     property int pixelSize: Theme.fontSizeMd
     property int weight: Font.Normal
     property color color: Theme.fg
-    // The separators pulse
-    property bool blink: true
     property bool animated: true
 
     property font font
@@ -55,14 +53,12 @@ Item {
                 property string shownCh: ch
                 property string leavingCh: ""
                 property real rise: 1
-                // The separator's pulse (1 = full strength)
-                property real pulse: 1
 
                 width: slot.digit ? root.digitW : separator.implicitWidth
                 height: root.lineH
                 clip: true
 
-                // A separator stays put and pulses
+                // A separator stays put
                 Text {
                     id: separator
                     visible: !slot.digit
@@ -70,7 +66,6 @@ Item {
                     text: slot.ch
                     color: root.color
                     font: root.font
-                    opacity: root.blink && root.rolling ? slot.pulse : 1
                 }
 
                 // A digit: the old one leaves through the top while the new one rises in
@@ -114,21 +109,6 @@ Item {
                     to: 1
                     duration: Motion.clockDigitMs
                     easing.type: Easing.OutCubic
-                }
-
-                SequentialAnimation on pulse {
-                    running: root.blink && !slot.digit && root.rolling
-                    loops: Animation.Infinite
-                    NumberAnimation {
-                        to: Motion.clockPulseDim
-                        duration: Motion.clockPulseMs / 2
-                        easing.type: Easing.InOutSine
-                    }
-                    NumberAnimation {
-                        to: 1
-                        duration: Motion.clockPulseMs / 2
-                        easing.type: Easing.InOutSine
-                    }
                 }
             }
         }

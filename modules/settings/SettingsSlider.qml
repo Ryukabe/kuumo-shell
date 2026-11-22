@@ -16,6 +16,9 @@ MoonSlider {
     property real stepSize: 1
     property string unit: ""
 
+    // The shown number is the value times this (100 turns 0.05 into 5)
+    property real displayScale: 1
+
     readonly property real current: Root.Config[root.settingKey]
     readonly property real span: root.to - root.from
 
@@ -23,7 +26,7 @@ MoonSlider {
     layout: SettingsLayout.sliderLayout
     iconName: "timer"
     level: root.span > 0 ? Math.max(0, Math.min(1, (root.current - root.from) / root.span)) : 0
-    valueText: root.current + (root.unit !== "" ? " " + root.unit : "")
+    valueText: Math.round(root.current * root.displayScale * 100) / 100 + (root.unit !== "" ? " " + root.unit : "")
     // Keyboard steps: one step, and five steps for the large one
     step: root.span > 0 ? root.stepSize / root.span : 0.01
     largeStep: root.span > 0 ? Math.min(1, 5 * root.stepSize / root.span) : 0.1
@@ -31,6 +34,7 @@ MoonSlider {
     onMoved: value => {
         const raw = root.from + value * root.span
         const snapped = Math.round((raw - root.from) / root.stepSize) * root.stepSize + root.from
-        SettingsState.set(root.settingKey, Math.max(root.from, Math.min(root.to, snapped)))
+        const clamped = Math.max(root.from, Math.min(root.to, snapped))
+        SettingsState.set(root.settingKey, Math.round(clamped * 1000) / 1000)
     }
 }

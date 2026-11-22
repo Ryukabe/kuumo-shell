@@ -92,4 +92,10 @@ Singleton {
     // Caps lock is read from Hyprland this long after a key press (ms), so the compositor
     // has updated its state by then
     property int capsLockRefreshMs: 40
+
+    // Launcher: the calculator / unit answer on top, and the suggestions for finishing a conversion
+    property bool launcherCalculator: true
+    property bool launcherSuggestions: true
+    // Launcher: how many result rows show before the list scrolls
+    property int launcherMaxRows: 6
 }
