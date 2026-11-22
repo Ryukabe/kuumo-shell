@@ -1,9 +1,12 @@
 singleton SettingsLayout SettingsLayout.qml
 singleton SettingsNav SettingsNav.qml
 singleton SettingsIndex SettingsIndex.qml
+singleton SettingsState SettingsState.qml
+
 SettingsWindow SettingsWindow.qml
 SettingsPage SettingsPage.qml
 SidebarItem SidebarItem.qml
+
 SearchField SearchField.qml
 SearchResults SearchResults.qml
 SearchResultRow SearchResultRow.qml

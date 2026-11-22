@@ -10,9 +10,9 @@ Singleton {
     // One line for every setting you build, so search can find it:
     // { id: "halo", title: "Moonlight halo", page: "island", section: "Glow", keywords: "shadow light" }
     // `page` is a page id from SettingsNav; `id` is what the row compares with SettingsNav.highlight.
-readonly property var settings: [
-    { id: "demo-toggle", title: "Demo toggle", page: "home", section: "Demo", keywords: "test switch" }
-]
+    readonly property var settings: [
+        { id: "island-halo", title: "Moonlight halo", page: "island", section: "Glow", keywords: "shadow light moon glow" }
+    ]
 
     // The pages first, then the settings: { id, title, page, subtitle, keywords, icon }
     readonly property var entries: {

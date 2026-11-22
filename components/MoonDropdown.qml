@@ -5,7 +5,8 @@ import QtQuick.Controls.Basic
 import "../styles"
 
 // A pick-one list in the moon style: a button with the current choice that opens a list
-// below it. It does not change `value` itself: it says picked(value) and the owner decides.
+// below it, or above it when there is no room below. It does not change `value` itself:
+// it says picked(value) and the owner decides.
 Item {
     id: root
 
@@ -75,12 +76,29 @@ Item {
 
     Popup {
         id: popup
+
+        // Decided each time the popup opens: true when it should appear above the button
+        property bool openUp: false
+
         parent: root
-        y: root.height + root.gap
         width: root.width
+        height: root.options.length * root.optionHeight + 2 * root.borderWidth
+        y: popup.openUp ? -popup.height - root.gap : root.height + root.gap
         padding: 0
         // Pressing the button itself must not count as "outside", or it would close and reopen
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+
+        onAboutToShow: {
+            const win = root.Window.window
+            if (!win) {
+                popup.openUp = false
+                return
+            }
+            const top = root.mapToItem(null, 0, 0).y
+            const spaceBelow = win.height - (top + root.height) - root.gap
+            const spaceAbove = top - root.gap
+            popup.openUp = spaceBelow < popup.height && spaceAbove > spaceBelow
+        }
 
         enter: Transition {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Motion.hoverFade; easing.type: Easing.OutCubic }

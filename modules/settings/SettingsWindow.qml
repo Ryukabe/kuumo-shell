@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import QtQuick.Controls.Basic
 import "../../styles"
 
 // The Settings window: a normal floating window with the sidebar on the left and the open
@@ -20,6 +21,9 @@ FloatingWindow {
 
     // Closed from outside (by the compositor): keep SettingsNav in step
     onVisibleChanged: if (!visible) SettingsNav.open = false
+
+    // Apply the saved settings now, so they hold even if this window is never opened
+    Component.onCompleted: SettingsState.start()
 
     Item {
         anchors.fill: parent
@@ -69,24 +73,54 @@ FloatingWindow {
                 onAccepted: results.openCurrent()
             }
 
-            // The pages, while nothing is typed
-            Column {
+            // The pages, while nothing is typed. Scrolls when the window is too short for them all.
+            Flickable {
+                id: pagesFlick
                 anchors.top: search.bottom
                 anchors.topMargin: SettingsLayout.sidebarPad
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: SettingsLayout.sidebarPad
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.leftMargin: SettingsLayout.sidebarPad
                 anchors.rightMargin: SettingsLayout.sidebarPad
-                spacing: SettingsLayout.itemGap
                 visible: search.text === ""
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                contentWidth: width
+                contentHeight: pagesColumn.height
 
-                Repeater {
-                    model: SettingsNav.pages
+                ScrollBar.vertical: ScrollBar {
+                    id: pagesBar
+                    policy: ScrollBar.AsNeeded
+                    minimumSize: 0.1
+                    padding: 2
 
-                    delegate: SidebarItem {
-                        required property var modelData
-                        entry: modelData
-                        onClicked: SettingsNav.goTo(entry.id)
+                    contentItem: Rectangle {
+                        implicitWidth: 5
+                        radius: width / 2
+                        color: Theme.fgMuted
+                        opacity: pagesBar.pressed ? 0.8 : (pagesBar.hovered || pagesBar.active) ? 0.5 : 0.2
+                        Behavior on opacity {
+                            NumberAnimation { duration: Motion.hoverFade; easing.type: Easing.OutCubic }
+                        }
+                    }
+                    background: Item {}
+                }
+
+                Column {
+                    id: pagesColumn
+                    width: pagesFlick.width
+                    spacing: SettingsLayout.itemGap
+
+                    Repeater {
+                        model: SettingsNav.pages
+
+                        delegate: SidebarItem {
+                            required property var modelData
+                            entry: modelData
+                            onClicked: SettingsNav.goTo(entry.id)
+                        }
                     }
                 }
             }
