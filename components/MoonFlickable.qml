@@ -1,4 +1,6 @@
 import QtQuick
+import ".." as Root
+import "../styles"
 
 // A scrolling area in the moon style: smooth wheel scrolling, a rubber-band bounce at the
 // top and bottom, and a floating scrollbar that hides when idle. Use it like a Flickable:
@@ -11,11 +13,11 @@ Item {
     property alias flickable: flick
 
     // How the scrolling feels
-    property real wheelStep: 90            // px per notch of a mouse wheel
-    property int glideMs: 300              // how long one notch glides
-    property real bounce: 40               // most the content is pulled past an end, in px
-    property int pullMs: 150               // time to be pulled past the end
-    property int settleMs: 500             // time to come back
+    property real wheelStep: Root.Config.scrollStep       // px per notch of a mouse wheel
+    property int glideMs: Motion.ms(300)                  // how long one notch glides
+    property real bounce: Root.Config.scrollBounce        // most the content is pulled past an end, in px
+    property int pullMs: Motion.ms(150)                   // time to be pulled past the end
+    property int settleMs: Motion.ms(500)                 // time to come back
     property int settleEasing: Easing.OutCubic   // Easing.OutBack gives a springier return
 
     // Where the wheel is heading, kept inside the ends

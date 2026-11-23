@@ -56,7 +56,7 @@ Item {
         color: Theme.fg
         font.family: Theme.fontMono
         font.pixelSize: Theme.fontSizeSm
-        maxLength: 7
+        maximumLength: 7
         selectByMouse: true
         clip: true
 

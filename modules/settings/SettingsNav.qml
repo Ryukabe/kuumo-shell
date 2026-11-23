@@ -24,6 +24,8 @@ Singleton {
           keywords: "welcome overview start" },
         { id: "appearance", title: "Appearance", icon: "palette", file: "AppearanceSettings.qml",
           keywords: "theme wallpaper colors color dark moon blur" },
+        { id: "animations", title: "Animations", icon: "animation", file: "AnimationSettings.qml",
+          keywords: "motion speed bounce spring fade slow fast smooth" },  
         { id: "island", title: "Island", icon: "web_asset", file: "IslandSettings.qml",
           keywords: "halo glow moonlight pill clock extended animation" },
         { id: "control-center", title: "Control Center", icon: "tune", file: "ControlCenterSettings.qml",

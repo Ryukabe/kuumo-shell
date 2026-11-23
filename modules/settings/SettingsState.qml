@@ -27,6 +27,7 @@ Singleton {
         "customFgMuted", "customFg", "customAccent",
         "customRed", "customGreen", "customYellow", "customBlue", "customPurple", "customCyan",
         "wallpaperTransitionFps", "switcherPreviewDelayMs",
+        "animationSpeed", "islandBounce", "reduceMotion", "clockRoll", "osdBounce", "switcherBounce", "scrollStep", "scrollBounce",
         "launcherCalculator", "launcherSuggestions", "launcherMaxRows",
         "sliderStep", "sliderLargeStep",
         "nightLightMinK", "nightLightMaxK", "nightLightDefaultK", "nightLightStepK",

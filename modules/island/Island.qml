@@ -339,7 +339,7 @@ Item {
             y: sy.value
             text: SystemState.timeText
             pixelSize: root.fullClockSize
-            animated: !ShellState.motionReduced
+            animated: Root.Config.clockRoll && !ShellState.motionReduced
             transformOrigin: Item.TopLeft
             scale: ss.value / root.fullClockSize
             opacity: root.clockHidden ? 0 : 1

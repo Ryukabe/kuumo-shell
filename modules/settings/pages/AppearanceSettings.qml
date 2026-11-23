@@ -1,3 +1,4 @@
+import QtQuick
 import ".."
 import "../../../components"
 import "../../../styles"
@@ -98,23 +99,24 @@ SettingsPage {
             ]
 
             delegate: SettingsRow {
+                id: colorRow
                 required property var modelData
 
-                settingId: "appearance-" + modelData.key
-                title: modelData.label
-                description: modelData.note
+                settingId: "appearance-" + colorRow.modelData.key
+                title: colorRow.modelData.label
+                description: colorRow.modelData.note
                 keywords: "custom color hex theme"
 
                 MoonColorField {
-                    value: Root.Config[modelData.key]
-                    onPicked: value => SettingsState.set(modelData.key, value)
+                    value: Root.Config[colorRow.modelData.key]
+                    onPicked: value => SettingsState.set(colorRow.modelData.key, value)
                 }
             }
         }
     }
 
     // Transition types of `awww img`; the first letter is capitalised for the label
-    readonly property var transitions: [
+    readonly property var transitionOptions: [
         "none", "simple", "fade", "left", "right", "top", "bottom",
         "wipe", "wave", "grow", "center", "any", "outer", "random"
     ].map(name => ({ value: name, label: name.charAt(0).toUpperCase() + name.slice(1) }))
@@ -129,7 +131,7 @@ SettingsPage {
             keywords: "awww animation effect"
 
             MoonDropdown {
-                options: page.transitions
+                options: page.transitionOptions
                 value: Root.Config.wallpaperTransition
                 onPicked: value => SettingsState.set("wallpaperTransition", value)
             }
@@ -142,7 +144,7 @@ SettingsPage {
             keywords: "awww animation effect"
 
             MoonDropdown {
-                options: page.transitions
+                options: page.transitionOptions
                 value: Root.Config.wallpaperPreviewTransition
                 onPicked: value => SettingsState.set("wallpaperPreviewTransition", value)
             }

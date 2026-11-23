@@ -123,4 +123,22 @@ Singleton {
     property bool launcherSuggestions: true
     // Launcher: how many result rows show before the list scrolls
     property int launcherMaxRows: 6
+
+    // Animations (Settings, Animations): 1 is the normal speed, above 1 is faster
+    property real animationSpeed: 1.0
+    // How much the island overshoots when it opens and closes: 0 is none, 1 is a lot.
+    // 0.5 is the original feel.
+    property real islandBounce: 0.5
+    // Turns animations off: springs jump to their target and fades are instant
+    property bool reduceMotion: false
+    // The clock's digits roll when the time changes; off changes them at once
+    property bool clockRoll: true
+    // How much the volume/brightness bar overshoots: 0 is none, 1 is the original feel
+    property real osdBounce: 1.0
+    // How much a highlighted theme or wallpaper card springs when it grows: 0 is none, 1 is a lot
+    property real switcherBounce: 0.5
+    // Scrolling in the Settings lists: pixels per mouse-wheel notch, and how far the content
+    // can be pulled past either end (px)
+    property real scrollStep: 90
+    property real scrollBounce: 40
 }
