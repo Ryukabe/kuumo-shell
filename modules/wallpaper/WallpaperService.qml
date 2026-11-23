@@ -107,6 +107,7 @@ Singleton {
     // A theme change (a preview in the theme switcher included) brings that theme's wallpaper.
     // A theme that lists no wallpapers leaves the one on screen alone.
     onThemeIdChanged: {
+        if (Theme.presetMap[root.themeId]?.dynamic) return
         const want = root.wantedFor(root.themeId)
         if (want === "" || want === Root.Config.wallpaper) return
         root.show(want, IslandState.theme

@@ -87,6 +87,22 @@ Singleton {
     // dragging past it by accident does nothing. 0 opens at once.
     property int wallpaperDropOpenMs: 500
 
+    // The custom theme (Settings, Appearance): your own colors as #rrggbb. They start as Kuumo Dark.
+    property bool customDarkMode: true
+    property string customBg: "#0a0a0a"
+    property string customSubBg: "#131417"
+    property string customElevatedBg: "#1b1d22"
+    property string customBorder: "#272a30"
+    property string customFgMuted: "#7e8490"
+    property string customFg: "#f4f6f9"
+    property string customAccent: "#ffffff"
+    property string customRed: "#e06c75"
+    property string customGreen: "#98c379"
+    property string customYellow: "#e5c07b"
+    property string customBlue: "#61afef"
+    property string customPurple: "#c678dd"
+    property string customCyan: "#56b6c2"
+
     // The clipboard island closes this long after a copy (ms), so "Copied" can be seen
     property int clipboardCopyCloseMs: 800
     // Clipboard island: after choosing an item, also paste it into the window you were in

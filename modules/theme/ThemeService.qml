@@ -9,6 +9,8 @@ import "../../state"
 // The data behind the theme switcher: the list of themes (cut down by the search), the saved
 // theme, and previewing, keeping and putting back. Root.Config.theme is what the shell shows
 // right now (a preview included); committedId is what is saved. settle() brings them together.
+// There are three kinds of theme: one of the presets listed in the switcher ("preset"), colors
+// made from the wallpaper on screen ("wallpaper"), and your own colors ("custom").
 Singleton {
     id: root
 
@@ -35,6 +37,14 @@ Singleton {
     // The saved theme: what comes back when a preview is dropped
     property string committedId: ""
 
+    // Which kind of theme is saved: "preset", "wallpaper" or "custom"
+    readonly property string source: root.committedId === "wallpaper" ? "wallpaper"
+        : root.committedId === "custom" ? "custom"
+        : "preset"
+
+    // The preset that comes back when the source goes back to "preset"
+    property string lastPreset: ""
+
     function indexOf(id) { return root.results.findIndex(t => t.id === id) }
 
     // Shows a theme without saving it
@@ -46,8 +56,19 @@ Singleton {
     function commit(id) {
         if (!Theme.presetMap[id]) return
         root.committedId = id
+        if (Theme.presetIds.includes(id)) root.lastPreset = id
         Root.Config.theme = id
         root.save()
+    }
+
+    // Switches between the presets, the wallpaper theme and the custom theme
+    function setSource(kind) {
+        if (kind === "wallpaper" || kind === "custom") {
+            root.commit(kind)
+            return
+        }
+        const back = Theme.presetIds.includes(root.lastPreset) ? root.lastPreset : Theme.presetIds[0]
+        root.commit(back)
     }
 
     // Puts the saved theme back, if a preview is showing
@@ -56,7 +77,11 @@ Singleton {
             Root.Config.theme = root.committedId
     }
 
-    Component.onCompleted: if (root.committedId === "") root.committedId = Root.Config.theme
+    Component.onCompleted: {
+        if (root.committedId === "") root.committedId = Root.Config.theme
+        if (root.lastPreset === "" && Theme.presetIds.includes(Root.Config.theme))
+            root.lastPreset = Root.Config.theme
+    }
 
     // Closing the island without choosing (Esc, a click outside, the bind again) drops the preview
     Connections {
@@ -83,16 +108,18 @@ Singleton {
 
     function restore(raw) {
         try {
-            const id = JSON.parse(raw).theme
-            if (!Theme.presetMap[id]) return
-            root.committedId = id
-            Root.Config.theme = id
+            const data = JSON.parse(raw)
+            if (Theme.presetIds.includes(data.preset)) root.lastPreset = data.preset
+            if (!Theme.presetMap[data.theme]) return
+            root.committedId = data.theme
+            if (Theme.presetIds.includes(data.theme)) root.lastPreset = data.theme
+            Root.Config.theme = data.theme
         } catch (e) {
             // An unreadable file: the default stays
         }
     }
 
     function save() {
-        store.setText(JSON.stringify({ theme: root.committedId }, null, 2))
+        store.setText(JSON.stringify({ theme: root.committedId, preset: root.lastPreset }, null, 2))
     }
 }

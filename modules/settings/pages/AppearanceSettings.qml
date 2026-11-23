@@ -1,11 +1,117 @@
 import ".."
 import "../../../components"
+import "../../../styles"
+import "../../theme"
 import "../../.." as Root
 
 // The Appearance page: wallpaper changes, the switchers, text effects.
 // The theme and wallpaper pickers go at the top later.
 SettingsPage {
     id: page
+
+    // Copies a theme's colors into the custom theme
+    function copyPreset(id) {
+        const preset = Theme.presetMap[id]
+        if (!preset) return
+        SettingsState.set("customDarkMode", preset.darkMode)
+        SettingsState.set("customBg", String(preset.bg))
+        SettingsState.set("customSubBg", String(preset.subBg))
+        SettingsState.set("customElevatedBg", String(preset.elevatedBg))
+        SettingsState.set("customBorder", String(preset.border))
+        SettingsState.set("customFgMuted", String(preset.fgMuted))
+        SettingsState.set("customFg", String(preset.fg))
+        SettingsState.set("customAccent", String(preset.accent))
+        SettingsState.set("customRed", String(preset.red))
+        SettingsState.set("customGreen", String(preset.green))
+        SettingsState.set("customYellow", String(preset.yellow))
+        SettingsState.set("customBlue", String(preset.blue))
+        SettingsState.set("customPurple", String(preset.purple))
+        SettingsState.set("customCyan", String(preset.cyan))
+    }
+
+    SettingsCard {
+        title: "Theme"
+
+        SettingsRow {
+            settingId: "appearance-theme-source"
+            title: "Theme source"
+            description: "Use one of the themes, make the colors from the wallpaper on screen, or set your own. Choosing a theme in the theme switcher goes back to Themes."
+            keywords: "colors preset wallpaper custom dynamic material you"
+
+            MoonSegmented {
+                options: [
+                    { value: "preset", label: "Themes" },
+                    { value: "wallpaper", label: "Wallpaper" },
+                    { value: "custom", label: "Custom" }
+                ]
+                value: ThemeService.source
+                onPicked: value => ThemeService.setSource(value)
+            }
+        }
+    }
+
+    SettingsCard {
+        title: "Custom theme"
+        visible: ThemeService.source === "custom"
+
+        SettingsRow {
+            settingId: "appearance-custom-copy"
+            title: "Start from a theme"
+            description: "Copies that theme's colors into the fields below."
+            keywords: "custom copy preset base"
+
+            MoonDropdown {
+                options: [{ value: "", label: "Choose a theme" }].concat(
+                    ThemeService.themes.map(t => ({ value: t.id, label: t.name })))
+                value: ""
+                onPicked: id => { if (id !== "") page.copyPreset(id) }
+            }
+        }
+
+        SettingsRow {
+            settingId: "appearance-custom-dark"
+            title: "Dark theme"
+            description: "Tell apps whether this theme is dark or light."
+            keywords: "custom light dark mode"
+
+            MoonToggle {
+                checked: Root.Config.customDarkMode
+                onToggled: value => SettingsState.set("customDarkMode", value)
+            }
+        }
+
+        Repeater {
+            model: [
+                { key: "customBg", label: "Background", note: "The main background." },
+                { key: "customSubBg", label: "Surface", note: "The island and cards." },
+                { key: "customElevatedBg", label: "Raised surface", note: "Pills, hover and popups." },
+                { key: "customBorder", label: "Border", note: "Lines and outlines." },
+                { key: "customFg", label: "Text", note: "The main text." },
+                { key: "customFgMuted", label: "Muted text", note: "Secondary text and icons." },
+                { key: "customAccent", label: "Accent", note: "Highlights and the moon." },
+                { key: "customRed", label: "Red", note: "" },
+                { key: "customGreen", label: "Green", note: "" },
+                { key: "customYellow", label: "Yellow", note: "" },
+                { key: "customBlue", label: "Blue", note: "" },
+                { key: "customPurple", label: "Purple", note: "" },
+                { key: "customCyan", label: "Cyan", note: "" }
+            ]
+
+            delegate: SettingsRow {
+                required property var modelData
+
+                settingId: "appearance-" + modelData.key
+                title: modelData.label
+                description: modelData.note
+                keywords: "custom color hex theme"
+
+                MoonColorField {
+                    value: Root.Config[modelData.key]
+                    onPicked: value => SettingsState.set(modelData.key, value)
+                }
+            }
+        }
+    }
 
     // Transition types of `awww img`; the first letter is capitalised for the label
     readonly property var transitions: [

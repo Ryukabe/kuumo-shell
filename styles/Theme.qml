@@ -13,12 +13,25 @@ Singleton {
     readonly property QtObject _tokyoNight: TokyoNight {}
     readonly property QtObject _rosePine: RosePine {}
     readonly property QtObject _ayu: Ayu {}
+    readonly property QtObject _wallpaperTheme: WallpaperPalette { wallpapers: root.allWallpapers }
+    readonly property QtObject _customTheme: CustomTheme { wallpapers: root.allWallpapers }
+
+    // Every wallpaper the presets list, once each: the wallpaper and custom themes offer all of them
+    readonly property var allWallpapers: {
+        const all = []
+        for (const preset of [_kuumoDark, _everblush, _tokyoNight, _rosePine, _ayu])
+            for (const name of preset.wallpapers)
+                if (!all.includes(name)) all.push(name)
+        return all
+    }
     readonly property var presetMap: ({
         "kuumo-dark": _kuumoDark,
         "everblush": _everblush,
         "tokyo-night": _tokyoNight,
         "rose-pine": _rosePine,
-        "ayu-dark": _ayu
+        "ayu-dark": _ayu,
+        "wallpaper": _wallpaperTheme,
+        "custom": _customTheme
     })
     // The order the theme switcher lists them in
     readonly property var presetIds: [
