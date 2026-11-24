@@ -3,7 +3,7 @@ import "../../../components"
 import "../../.." as Root
 
 // The Control Center page: keyboard steps of the sliders, the volume and brightness keys,
-// and the range of the Night Light.
+// the range of the Night Light, and the KDE Connect button.
 SettingsPage {
     SettingsCard {
         title: "Sliders"
@@ -83,6 +83,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "control-nightlight-warmest"
+            inLauncher: false
             title: "Warmest"
             description: "The low end of the temperature slider."
             keywords: "night light kelvin orange"
@@ -96,6 +97,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "control-nightlight-coldest"
+            inLauncher: false
             title: "Coldest"
             description: "The high end of the temperature slider."
             keywords: "night light kelvin blue"
@@ -109,6 +111,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "control-nightlight-default"
+            inLauncher: false
             title: "Starting temperature"
             description: "Used until you choose one."
             keywords: "night light kelvin default"
@@ -139,6 +142,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "control-nightlight-gamma-min"
+            inLauncher: false
             title: "Darkest"
             description: "The lowest the gamma slider goes."
             keywords: "night light gamma dim"
@@ -152,6 +156,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "control-nightlight-gamma-max"
+            inLauncher: false
             title: "Brightest"
             description: "The highest the gamma slider goes."
             keywords: "night light gamma"
@@ -163,4 +168,47 @@ SettingsPage {
             }
         }
     }
-}   
+
+    SettingsCard {
+        title: "KDE Connect"
+
+        SettingsRow {
+            settingId: "control-kdeconnect-ring"
+            configKey: "kdeConnectBatteryRing"
+            title: "Battery ring on the button"
+            description: "Shows the phone's battery as a ring inside the KDE Connect button. The KDE Connect page always shows it."
+            keywords: "phone battery circle"
+
+            MoonToggle {
+                checked: Root.Config.kdeConnectBatteryRing
+                onToggled: value => SettingsState.set("kdeConnectBatteryRing", value)
+            }
+        }
+
+        SettingsRow {
+            settingId: "control-kdeconnect-low"
+            title: "Low battery level"
+            description: "The battery ring turns red when the phone is at or below this and not charging."
+            keywords: "phone battery red warning"
+
+            SettingsSlider {
+                settingKey: "kdeConnectLowBattery"
+                iconName: "battery_alert"
+                from: 5; to: 50; stepSize: 5; unit: "%"
+            }
+        }
+
+        SettingsRow {
+            settingId: "control-kdeconnect-waves"
+            configKey: "kdeConnectWaves"
+            title: "Signal waves"
+            description: "Rings ripple out of the phone icon when you ping the phone, find it or send the clipboard."
+            keywords: "phone ping animation ripple"
+
+            MoonToggle {
+                checked: Root.Config.kdeConnectWaves
+                onToggled: value => SettingsState.set("kdeConnectWaves", value)
+            }
+        }
+    }
+}

@@ -9,6 +9,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "clipboard-auto-paste"
+            configKey: "clipboardAutoPaste"
             title: "Paste into the window you were in"
             description: "Also pastes the item after copying it. Needs wtype installed. Pictures only paste into apps that accept them."
             keywords: "paste insert type automatic wtype"

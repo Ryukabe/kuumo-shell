@@ -5,12 +5,13 @@ import Quickshell
 import "../../components"
 import "../../styles"
 import "../../state"
+import "../.." as Root
 
 // The launcher island: a search field on top, the matching rows as a list below. A row
 // is an app, a calculator / conversion answer, a suggestion for finishing a conversion,
-// or (in command mode) a command. Enter on a command opens its view. The emoji picker
-// shows its emoji as a grid instead of a list, with the name of the emoji you are on
-// under it.
+// a setting (in the settings command), or (in command mode) a command. Enter on a command
+// opens its view. The emoji picker shows its emoji as a grid instead of a list, with the
+// name of the emoji you are on under it.
 Item {
     id: root
 
@@ -73,6 +74,12 @@ Item {
         }
     }
 
+    // Left or right on a setting row changes it (big takes five steps)
+    function nudge(direction, big) {
+        const row = LauncherService.results[list.currentIndex]
+        if (row && row.kind === "setting") LauncherService.nudgeSetting(row.setting, direction, big)
+    }
+
     // The icon at the start of the search field: a magnifier for apps, a terminal in command
     // mode, and the icon of the open command (the emoji face, ...). It lines up with the
     // icons of the rows below.
@@ -126,13 +133,16 @@ Item {
 
         Keys.onUpPressed: root.move(0, -1)
         Keys.onDownPressed: root.move(0, 1)
-        // Left and right move the highlight in the emoji grid, and the cursor otherwise
+        // Left and right move the highlight in the emoji grid, change the highlighted
+        // setting in the settings view, and move the cursor otherwise
         Keys.onLeftPressed: event => {
             if (LauncherService.gridView) root.move(-1, 0)
+            else if (LauncherService.settingsView) root.nudge(-1, !!(event.modifiers & Qt.ShiftModifier))
             else event.accepted = false
         }
         Keys.onRightPressed: event => {
             if (LauncherService.gridView) root.move(1, 0)
+            else if (LauncherService.settingsView) root.nudge(1, !!(event.modifiers & Qt.ShiftModifier))
             else event.accepted = false
         }
         Keys.onReturnPressed: root.launchCurrent()
@@ -143,18 +153,18 @@ Item {
             ? LauncherService.closeCommand()
             : IslandState.closeAll()
 
-        // Backspace in an empty field steps back: out of an open command to the command
-        // list, and out of the command list to the apps
-        Keys.onPressed: event => {
-            if (event.key !== Qt.Key_Backspace || input.text !== "") return
-            if (LauncherService.activeCommand) {
-                LauncherService.closeCommand()
-                event.accepted = true
-            } else if (LauncherService.commandMode) {
-                LauncherService.leaveCommands()
-                event.accepted = true
-            }
-        }
+     // Backspace in an empty field steps back: out of an open command to the command
+     // list, and (when that is on in Settings) out of the command list to the apps
+     Keys.onPressed: event => {
+         if (event.key !== Qt.Key_Backspace || input.text !== "") return
+         if (LauncherService.activeCommand) {
+             LauncherService.closeCommand()
+             event.accepted = true
+         } else if (LauncherService.commandMode && Root.Config.launcherBackspaceLeavesCommands) {
+             LauncherService.leaveCommands()
+             event.accepted = true
+         }
+     }
     }
 
     // Hint shown while the field is empty: it types itself out when the island opens and
@@ -194,7 +204,17 @@ Item {
 
             // An app has its own icon; every other row has an icon-font symbol
             readonly property bool isApp: modelData.kind === "app"
+            readonly property bool isSetting: modelData.kind === "setting"
             readonly property bool current: index === list.currentIndex
+
+            // The value of a setting row, read live so it follows every change. The
+            // highlighted row shows arrows for a number or a choice, which left and right change.
+            readonly property string valueText: {
+                if (!row.isSetting) return ""
+                const value = LauncherService.settingValue(row.modelData.setting)
+                const kind = row.modelData.setting.control.kind
+                return row.current && kind !== "toggle" ? "‹  " + value + "  ›" : value
+            }
 
             width: list.width
             height: root.layout.rowH
@@ -241,13 +261,30 @@ Item {
                 }
             }
 
+            // The value of a setting, on the right
+            Text {
+                id: valueLabel
+                anchors.right: parent.right
+                anchors.rightMargin: root.layout.rowPad
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(implicitWidth, parent.width * 0.4)
+                visible: row.isSetting
+                horizontalAlignment: Text.AlignRight
+                elide: Text.ElideRight
+                text: row.valueText
+                color: row.current ? Theme.fg : Theme.fgMuted
+                Behavior on color { ColorAnimation { duration: Motion.hoverFade } }
+                font.family: Theme.fontText
+                font.pixelSize: Theme.fontSizeSm
+            }
+
             // Name (or the answer), and under it the small line of an answer, suggestion,
-            // command or note
+            // command, setting or note
             Column {
                 anchors.left: iconSlot.right
                 anchors.leftMargin: root.layout.iconGap
-                anchors.right: parent.right
-                anchors.rightMargin: root.layout.rowPad
+                anchors.right: row.isSetting ? valueLabel.left : parent.right
+                anchors.rightMargin: row.isSetting ? root.layout.iconGap : root.layout.rowPad
                 anchors.verticalCenter: parent.verticalCenter
 
                 Text {

@@ -126,6 +126,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "appearance-wallpaper-transition"
+            configKey: "wallpaperTransition"
             title: "Transition"
             description: "How the screen changes when you keep a wallpaper."
             keywords: "awww animation effect"
@@ -139,6 +140,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "appearance-wallpaper-preview-transition"
+            configKey: "wallpaperPreviewTransition"
             title: "Preview transition"
             description: "Used for previews, theme changes in the switcher and the wallpaper restored at startup. None finishes instantly."
             keywords: "awww animation effect"
@@ -199,6 +201,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "appearance-typewriter"
+            configKey: "typewriter"
             title: "Text effects"
             description: "Typing, backspace and iris effects. Off shows the final text at once."
             keywords: "typewriter animation typing"
@@ -215,6 +218,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "appearance-wallpaper-drop"
+            configKey: "wallpaperDropEnabled"
             title: "Add by dropping"
             description: "Drag image files onto the island to copy them into the wallpapers folder and add them to the current theme."
             keywords: "drag drop add import wallpaper folder"
@@ -227,6 +231,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "appearance-wallpaper-drop-all"
+            configKey: "wallpaperDropAllThemes"
             title: "Right half adds to every theme"
             description: "While dragging, the right half of the island adds the files to all themes, and the left half only to the current one."
             keywords: "drag drop all themes every"

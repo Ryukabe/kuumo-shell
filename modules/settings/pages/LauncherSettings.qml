@@ -26,6 +26,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "launcher-calculator"
+            configKey: "launcherCalculator"
             title: "Calculator and unit answers"
             description: "Typing a sum or a conversion shows the answer on top. Enter copies it."
             keywords: "math convert currency units"
@@ -38,6 +39,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "launcher-suggestions"
+            configKey: "launcherSuggestions"
             title: "Conversion suggestions"
             description: "While you type a number or a unit, offers ways to finish the conversion."
             keywords: "convert autocomplete hints"
@@ -45,6 +47,23 @@ SettingsPage {
             MoonToggle {
                 checked: Root.Config.launcherSuggestions
                 onToggled: value => SettingsState.set("launcherSuggestions", value)
+            }
+        }
+    }
+
+    SettingsCard {
+        title: "Commands"
+
+        SettingsRow {
+            settingId: "launcher-backspace-leaves"
+            configKey: "launcherBackspaceLeavesCommands"
+            title: "Backspace leaves the command list"
+            description: "Backspace on an empty search field in the command list goes back to the apps. Off keeps you in the commands; Esc still closes the island."
+            keywords: "back return apps empty esc"
+
+            MoonToggle {
+                checked: Root.Config.launcherBackspaceLeavesCommands
+                onToggled: value => SettingsState.set("launcherBackspaceLeavesCommands", value)
             }
         }
     }

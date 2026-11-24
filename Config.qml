@@ -54,6 +54,10 @@ Singleton {
     // Title/artist slide and the art dip when the track changes
     property bool mediaTrackAnimation: true
 
+    property bool kdeConnectBatteryRing: true
+    property int kdeConnectLowBattery: 20
+    property bool kdeConnectWaves: true
+
     // Night Light (hyprsunset): the range of its sliders and where it starts
     property int nightLightMinK: 2500         // warmest, in Kelvin
     property int nightLightMaxK: 9000         // coldest
@@ -120,6 +124,7 @@ Singleton {
 
     // Launcher: the calculator / unit answer on top, and the suggestions for finishing a conversion
     property bool launcherCalculator: true
+    property bool launcherBackspaceLeavesCommands: false
     property bool launcherSuggestions: true
     // Launcher: how many result rows show before the list scrolls
     property int launcherMaxRows: 6

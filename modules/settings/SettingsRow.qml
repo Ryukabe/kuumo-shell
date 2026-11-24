@@ -4,7 +4,10 @@ import "../../styles"
 // One setting: an optional icon, a title with a short description, and the control on the
 // right. Whatever you put inside the row (a MoonToggle, a MoonDropdown, ...) is that control.
 // A row with a settingId is found by search on its own; no list needs updating.
-// Usage: SettingsRow { settingId: "halo"; title: "..."; description: "..."; MoonToggle { ... } }
+// A row whose control changes a Config setting can also be changed from the launcher: a
+// SettingsSlider already says which setting it changes; a toggle or a dropdown needs
+// configKey on the row.
+// Usage: SettingsRow { settingId: "halo"; configKey: "islandHalo"; title: "..."; description: "..."; MoonToggle { ... } }
 Item {
     id: root
 
@@ -17,6 +20,11 @@ Item {
     property string keywords: ""
     // Optional Material Symbols name shown before the text
     property string icon: ""
+    // The Config.qml property this row's control changes (must be in SettingsState.keys).
+    // Not needed for a SettingsSlider, which says it itself.
+    property string configKey: ""
+    // False keeps the row out of the launcher (for a slider whose range depends on another setting)
+    property bool inLauncher: true
 
     default property alias control: slot.data
 
@@ -30,6 +38,42 @@ Item {
             item = item.parent
         }
         return ""
+    }
+
+    // What the launcher needs to change this setting, or null when it cannot be changed there:
+    //   { key, kind: "toggle" }
+    //   { key, kind: "number", from, to, step, unit, scale }
+    //   { key, kind: "choice", options: [{ value, label }] }
+    //   { key, kind: "color" }
+    function controlInfo() {
+        if (!root.inLauncher) return null
+        const child = slot.children.length > 0 ? slot.children[0] : null
+        let key = root.configKey
+        if (key === "" && child && child.settingKey !== undefined) key = child.settingKey
+        if (key === "") return null
+
+        SettingsState.captureDefaults()
+        const base = SettingsState.defaults[key]
+        if (base === undefined) return null
+
+        if (typeof base === "boolean") return { key: key, kind: "toggle" }
+
+        if (typeof base === "number") {
+            if (!child || child.from === undefined || child.to === undefined) return null
+            return {
+                key: key, kind: "number",
+                from: child.from, to: child.to,
+                step: child.stepSize !== undefined ? child.stepSize : 1,
+                unit: child.unit !== undefined ? child.unit : "",
+                scale: child.displayScale !== undefined ? child.displayScale : 1
+            }
+        }
+
+        if (typeof base === "string") {
+            if (child && child.options !== undefined) return { key: key, kind: "choice", options: child.options }
+            if (child && child.valid !== undefined) return { key: key, kind: "color" }
+        }
+        return null
     }
 
     width: parent ? parent.width : 0
@@ -46,7 +90,8 @@ Item {
                 title: root.title,
                 description: root.description,
                 section: root.cardTitle(),
-                keywords: root.keywords
+                keywords: root.keywords,
+                control: root.controlInfo()
             })
         }
         if (highlighted) flash.restart()

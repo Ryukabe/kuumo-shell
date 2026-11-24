@@ -19,7 +19,7 @@ Singleton {
         "workspacesAlwaysShown", "workspacesMax",
         "osdVolumeStep", "osdVolumeMax", "osdBrightnessStep",
         "mediaScrollUpIsNext", "mediaDividerBreathes", "mediaDividerSurges", "mediaTrackAnimation",
-        "notificationToastMs", "clipboardCopyCloseMs",
+        "notificationToastMs", "clipboardCopyCloseMs", "clipboardAutoPaste",
         "typewriter", "polkitShake",
         "wallpaperTransition", "wallpaperPreviewTransition", "wallpaperTransitionSeconds", 
         "wallpaperDropEnabled", "wallpaperDropAllThemes", "wallpaperDropOpenMs",
@@ -28,8 +28,9 @@ Singleton {
         "customRed", "customGreen", "customYellow", "customBlue", "customPurple", "customCyan",
         "wallpaperTransitionFps", "switcherPreviewDelayMs",
         "animationSpeed", "islandBounce", "reduceMotion", "clockRoll", "osdBounce", "switcherBounce", "scrollStep", "scrollBounce",
-        "launcherCalculator", "launcherSuggestions", "launcherMaxRows",
+        "launcherCalculator", "launcherSuggestions", "launcherMaxRows", "launcherBackspaceLeavesCommands",
         "sliderStep", "sliderLargeStep",
+        "kdeConnectBatteryRing", "kdeConnectLowBattery", "kdeConnectWaves",
         "nightLightMinK", "nightLightMaxK", "nightLightDefaultK", "nightLightStepK",
         "nightLightMinGamma", "nightLightMaxGamma"
     ]

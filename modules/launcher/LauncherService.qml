@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import "../.." as Root
+import "../settings"
 import "CalcEngine.js" as Calc
 import "EmojiData.js" as Emoji
 import "../../state"
@@ -29,6 +30,9 @@ Singleton {
     // The emoji picker shows its rows as a grid, everything else as a list
     readonly property bool gridView: root.activeCommand !== null && root.activeCommand.id === "emoji"
 
+    // The settings command lists settings you can change right here
+    readonly property bool settingsView: root.activeCommand !== null && root.activeCommand.id === "settings"
+
     // The icon at the start of the search field and the hint of the empty field, for the
     // mode the launcher is in
     readonly property string fieldSymbol: root.activeCommand
@@ -51,16 +55,21 @@ Singleton {
         ? Calc.suggest(root.query, RatesService.rates, RatesService.fetchedAt)
         : []
 
-    // The rows of the list. Each one is { kind: "calc" | "suggest" | "app" | "command" | "note" | "emoji",
+    // The rows of the list. Each one is { kind: "calc" | "suggest" | "app" | "command" | "note" | "emoji" | "setting",
     // name, sub, symbol (icon-font name, not for apps), icon (an app's icon), entry, copy, fill,
-    // command, char (an emoji) }.
+    // command, char (an emoji), setting (a SettingsIndex entry) }.
     readonly property var results: root.activeCommand
         ? root.buildOpen(root.activeCommand, root.query)
         : root.commandMode
             ? root.buildCommands(root.query)
             : root.build(root.query, root.calc, root.suggestions)
 
-    // Closing the launcher also leaves command mode and closes the command that was open
+    // Closing the launcher also leaves command mode and closes the command that was open.
+    // A request for the commands (SUPER + ALT + Space) opens them, or closes the launcher
+    // when they are already showing.
+    // Closing the launcher also leaves command mode and closes the command that was open.
+    // A request for the commands or for one command (keybinds) opens it, or closes the
+    // launcher when it is already showing.
     Connections {
         target: IslandState
         function onLauncherChanged() {
@@ -69,6 +78,38 @@ Singleton {
                 root.commandMode = false
             }
         }
+        function onCommandRequested(id, wasOpen) {
+            // The command list
+            if (id === "") {
+                if (wasOpen && root.commandMode && !root.activeCommand) {
+                    IslandState.collapse()
+                    return
+                }
+                root.activeCommand = null
+                root.commandMode = true
+                // Text typed in the apps view must not filter the commands
+                if (root.query !== "") root.fillRequested("")
+                return
+            }
+
+            // One command
+            const cmd = root.commandById(id)
+            if (!cmd || !cmd.ready) return
+            if (wasOpen && root.activeCommand && root.activeCommand.id === id) {
+                IslandState.collapse()
+                return
+            }
+            // A command that does its own thing (the clipboard, ...) takes over the island
+            if (CommandService.run(cmd)) return
+            // The settings view needs the list of settings, which is built the first time
+            if (id === "settings") SettingsIndex.scan()
+            root.commandMode = true
+            root.activeCommand = cmd
+        }
+    }
+
+    function commandById(id) {
+        return CommandService.commands.find(c => c.id === id) ?? null
     }
 
     function closeCommand() { root.activeCommand = null }
@@ -121,15 +162,84 @@ Singleton {
         }))
     }
 
-    // The view of an open command: the emoji for the emoji picker, and until the other
-    // commands are connected, one note.
+    // The view of an open command: the emoji for the emoji picker, the settings you can
+    // change for the settings command, and until the other commands are connected, one note.
     function buildOpen(cmd, text) {
         if (cmd.id === "emoji") return Emoji.search(text)
+        if (cmd.id === "settings") return root.settingRows(text)
         return [{ kind: "note", name: "Coming soon", sub: cmd.name + " is not connected yet", symbol: "hourglass_empty" }]
+    }
+
+    // ── Settings ──
+    // The settings the launcher can change (not colors), matching the typed words, best
+    // first. The rows do not read the setting values, so changing one does not rebuild
+    // the list; the value on each row is read live by the view through settingValue().
+    function settingRows(text) {
+        const words = text.trim().toLowerCase().split(/\s+/).filter(w => w !== "")
+        const changeable = SettingsIndex.entries.filter(e => e.control && e.control.kind !== "color")
+        const found = words.length === 0
+            ? changeable
+            : changeable
+                .map(e => ({ entry: e, s: SettingsIndex.score(e, words) }))
+                .filter(m => m.s > 0)
+                .sort((a, b) => b.s - a.s)
+                .map(m => m.entry)
+        return found.map(e => ({
+            kind: "setting",
+            name: e.title,
+            sub: e.subtitle,
+            symbol: e.icon,
+            setting: e
+        }))
+    }
+
+    // The current value of a setting, as the text shown on its row
+    function settingValue(entry) {
+        const c = entry.control
+        const v = Root.Config[c.key]
+        if (c.kind === "toggle") return v ? "On" : "Off"
+        if (c.kind === "number")
+            return Math.round(v * c.scale * 100) / 100 + (c.unit !== "" ? " " + c.unit : "")
+        if (c.kind === "choice") {
+            const option = c.options.find(o => o.value === v)
+            return option ? option.label : String(v)
+        }
+        return String(v)
+    }
+
+    // The next (direction 1) or previous (-1) option of a choice, wrapping around
+    function cycleChoice(c, direction) {
+        const count = c.options.length
+        if (count === 0) return
+        const at = c.options.findIndex(o => o.value === Root.Config[c.key])
+        SettingsState.set(c.key, c.options[(at + direction + count) % count].value)
+    }
+
+    // Enter or a click: a toggle flips, a choice moves to its next option, a number does nothing
+    function flipSetting(entry) {
+        const c = entry.control
+        if (c.kind === "toggle") SettingsState.set(c.key, !Root.Config[c.key])
+        else if (c.kind === "choice") root.cycleChoice(c, 1)
+    }
+
+    // Left or right: a toggle goes off or on, a choice moves, a number takes one step
+    // (five with big), kept between its ends
+    function nudgeSetting(entry, direction, big) {
+        const c = entry.control
+        if (c.kind === "toggle") {
+            SettingsState.set(c.key, direction > 0)
+        } else if (c.kind === "choice") {
+            root.cycleChoice(c, direction)
+        } else if (c.kind === "number") {
+            const amount = c.step * (big ? 5 : 1)
+            const next = Math.max(c.from, Math.min(c.to, Root.Config[c.key] + direction * amount))
+            SettingsState.set(c.key, Math.round(next * 1000) / 1000)
+        }
     }
 
     // Enter or a click on a row.
     // A suggestion puts its conversion into the search box and keeps the launcher open.
+    // A setting changes and keeps the launcher open.
     // A command that does its own thing (like opening the clipboard) runs and handles the
     // island itself; any other command opens its view here.
     // An answer or an emoji is copied, an app is started, and then the island closes.
@@ -140,8 +250,16 @@ Singleton {
             root.fillRequested(row.fill)
             return
         }
+        if (row.kind === "setting") {
+            root.flipSetting(row.setting)
+            return
+        }
         if (row.kind === "command") {
-            if (!CommandService.run(row.command)) root.activeCommand = row.command
+            if (!CommandService.run(row.command)) {
+                // The settings view needs the list of settings, which is built the first time
+                if (row.command.id === "settings") SettingsIndex.scan()
+                root.activeCommand = row.command
+            }
             return
         }
         if (row.kind === "note") return

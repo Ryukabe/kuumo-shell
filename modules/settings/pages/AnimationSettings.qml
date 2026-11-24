@@ -9,6 +9,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "animations-reduce"
+            configKey: "reduceMotion"
             title: "Reduce motion"
             description: "Turns animations off: things jump to where they are going and fades are instant."
             keywords: "animations off disable accessibility motion"
@@ -81,6 +82,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "animations-clock-roll"
+            configKey: "clockRoll"
             title: "Rolling digits"
             description: "The clock's digits roll when the time changes. Off changes them at once."
             keywords: "clock digit number flow roll time"

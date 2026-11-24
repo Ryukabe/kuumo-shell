@@ -13,7 +13,7 @@ Singleton {
     readonly property var commands: [
         { id: "wallpaper", name: "Wallpaper switcher", sub: "Pick a wallpaper", icon: "wallpaper", hint: "Search wallpapers", words: "background image", ready: true },
         { id: "theme", name: "Theme switcher", sub: "Change colors and theme", icon: "palette", hint: "Search themes", words: "colors appearance dark light", ready: true },
-        { id: "settings", name: "Settings", sub: "Open the settings app", icon: "settings", hint: "Search settings", words: "preferences options config", ready: false },
+        { id: "settings", name: "Settings", sub: "Change any setting from here", icon: "settings", hint: "Search settings", words: "preferences options config", ready: true },
         { id: "emoji", name: "Emoji picker", sub: "Find and copy an emoji", icon: "emoji_emotions", hint: "Search emoji", words: "emoticon smiley", ready: true },
         { id: "clipboard", name: "Clipboard history", sub: "Paste something you copied before", icon: "content_paste", hint: "Search clipboard", words: "copy paste", ready: true },
         { id: "power", name: "Power actions", sub: "Lock, sleep, restart, shut down", icon: "power_settings_new", hint: "Search actions", words: "lock sleep suspend reboot restart shutdown poweroff logout", ready: true }

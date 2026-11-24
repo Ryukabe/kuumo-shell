@@ -133,7 +133,7 @@ Item {
 
                     PhoneIcon {
                         anchors.centerIn: parent
-                        size: root.layout.tileIconSize
+                        size: root.layout.btnSize
                         color: kdeConnectButton.iconColor
                         level: KdeConnectService.batteryLevel
                         active: KdeConnectService.reachable

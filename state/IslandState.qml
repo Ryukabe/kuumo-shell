@@ -29,6 +29,18 @@ Singleton {
     function openLauncher() { mode = "launcher" }
     function toggleLauncher() { launcher ? collapse() : openLauncher() }
 
+    // The launcher on its command list (id "") or straight in one command ("emoji",
+    // "settings", ...). LauncherService listens to commandRequested and decides what to do
+    // with it (it knows what the launcher shows); wasOpen says whether the launcher was
+    // already open when this was asked.
+    signal commandRequested(string id, bool wasOpen)
+    function openCommand(id) {
+        const wasOpen = launcher
+        mode = "launcher"
+        commandRequested(id, wasOpen)
+    }
+    function openCommands() { openCommand("") }
+
     function openClipboard() { mode = "clipboard" }
     function toggleClipboard() { clipboard ? collapse() : openClipboard() }
 

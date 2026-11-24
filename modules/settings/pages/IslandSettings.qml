@@ -8,7 +8,8 @@ SettingsPage {
         title: "Glow"
 
         SettingsRow {
-            settingId: "island-halo"
+            settingId: "halo"
+            configKey: "islandHalo"
             title: "Moonlight halo"
             description: "A soft glow behind the island."
 
@@ -50,6 +51,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "island-keyboard"
+            configKey: "panelsTakeKeyboard"
             title: "Take the keyboard while a panel is open"
             description: "Lets Esc close a panel. Off means Esc only works after you click the island."
 
@@ -65,6 +67,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "island-workspaces-always"
+            inLauncher: false
             title: "Always shown"
             description: "This many workspace dots always show."
 
@@ -93,6 +96,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "island-media-scroll"
+            configKey: "mediaScrollUpIsNext"
             title: "Scroll up skips to the next track"
             description: "Off means scrolling down is the next track."
 
@@ -104,6 +108,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "island-media-breathe"
+            configKey: "mediaDividerBreathes"
             title: "Breathing divider"
             description: "The glow on the divider slowly breathes."
 
@@ -115,6 +120,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "island-media-surge"
+            configKey: "mediaDividerSurges"
             title: "Divider surge on track change"
             description: "The divider glow surges when the track changes."
 
@@ -126,6 +132,7 @@ SettingsPage {
 
         SettingsRow {
             settingId: "island-media-track-animation"
+            configKey: "mediaTrackAnimation"
             title: "Track change animation"
             description: "The title and artist slide and the album art dips when the track changes."
 

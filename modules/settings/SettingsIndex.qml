@@ -10,7 +10,8 @@ import Quickshell
 Singleton {
     id: root
 
-    // Filled by scan(): { id, title, description, page, section, keywords } for each row
+    // Filled by scan(): { id, title, description, page, section, keywords, control } for each row.
+    // control says how the launcher can change the setting (see SettingsRow.controlInfo), or is null.
     property var settings: []
 
     // True only while scan() is building the pages; SettingsRow checks it
@@ -51,13 +52,16 @@ Singleton {
         root.scanning = false
         root.scanPage = ""
         root.settings = root.collector
+
+        const changeable = root.settings.filter(s => s.control).length
+        console.log("SettingsIndex: " + root.settings.length + " settings, " + changeable + " can be changed from the launcher")
     }
 
-    // The pages first, then the settings: { id, title, page, subtitle, keywords, icon }
+    // The pages first, then the settings: { id, title, page, subtitle, keywords, icon, control }
     readonly property var entries: {
         const pageEntries = SettingsNav.pages.map(p => ({
             id: p.id, title: p.title, page: p.id, subtitle: "Page",
-            keywords: p.keywords, icon: p.icon
+            keywords: p.keywords, icon: p.icon, control: null
         }))
         const settingEntries = root.settings.map(s => {
             const owner = SettingsNav.pages.find(p => p.id === s.page)
@@ -65,7 +69,8 @@ Singleton {
                 id: s.id, title: s.title, page: s.page,
                 subtitle: (owner ? owner.title : "") + (s.section ? " › " + s.section : ""),
                 keywords: ((s.keywords ?? "") + " " + (s.description ?? "")).trim(),
-                icon: owner ? owner.icon : "settings"
+                icon: owner ? owner.icon : "settings",
+                control: s.control ?? null
             }
         })
         return pageEntries.concat(settingEntries)

@@ -47,8 +47,11 @@ Singleton {
             // The notifications card (bell, pulsing dot) and the rows of the notifications list
             cardH: 64, cardIconSize: 24, bellDot: 8,
             noteRowH: 64, noteIconSize: 36, noteIconGap: 12, noteIconRadius: 8, noteCloseSize: 18,
-            // The phone's battery ring on the KDE Connect page
-            phoneIconSize: 56
+            // The KDE Connect page: a card with the phone icon (a battery ring around it) on
+            // the left and the percentage, status and connection on the right, then a row of
+            // round buttons and a card that opens the KDE Connect app
+            phoneIconSize: 80, phoneCardH: 108, phoneCardPad: 14, phoneCardRadius: 16, phonePctSize: 28,
+            signalBarW: 3, signalBarGap: 2, signalBarH: 12
         },
         // Search field on top, one row per matching app below. The height is not here:
         // it grows with the number of results (see launcherLayout in Island.qml).

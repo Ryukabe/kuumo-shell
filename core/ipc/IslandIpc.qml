@@ -13,6 +13,12 @@ IpcHandler {
     function control(): void { IslandState.toggleControl() }
     // Open the launcher from anywhere, or close it again if it is open
     function launcher(): void { IslandState.toggleLauncher() }
+    // Open the launcher on its command list from anywhere, or close it again if it shows
+    // the command list already
+    function commands(): void { IslandState.openCommands() }
+    // Open one command straight away, for example: qs ipc call island command emoji
+    // (ids are in CommandService). Calling it again while that view shows closes the island.
+    function command(id: string): void { IslandState.openCommand(id) }
     // Open the clipboard history from anywhere, or close it again if it is open
     function clipboard(): void { IslandState.toggleClipboard() }
     // Open the power menu from anywhere, or close it again if it is open

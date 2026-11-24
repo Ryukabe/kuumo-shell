@@ -3,9 +3,9 @@ import QtQuick.Shapes
 import "../../styles"
 
 // A round power-menu button drawn like the control center's moon. A tap button lights
-// up while the pointer is on it and fires on release. A hold button fills like a moon
+// up while it is selected and fires on release. A hold button fills like a moon
 // while you hold it, with a red ring growing around it, and fires when the ring closes.
-// Letting go early drains it back.
+// Letting go early drains it back. The pointer and the keyboard both select a button.
 Item {
     id: root
 
@@ -15,14 +15,20 @@ Item {
     property string iconName: ""
     property bool hold: false       // must be held instead of tapped
     property bool ready: true       // false = dimmed, does nothing
+    // The button the pointer or the keyboard is on
+    property bool selected: false
+    // How lit a selected hold button is before you start holding it (0..1)
+    property real holdSelectedLevel: 0.35
 
     signal activated()
+    // The pointer came onto the button
+    signal hovered()
 
     // 0..1, how far the hold has got
     property real progress: 0
 
-    // 0..1, the moon's brightness: the hold for a hold button, the pointer for a tap button
-    property real hoverFade: !hold && area.containsMouse ? 1 : 0
+    // 0..1, the moon's brightness: the hold or the selection
+    property real hoverFade: selected ? (hold ? holdSelectedLevel : 1) : 0
     Behavior on hoverFade {
         NumberAnimation { duration: Motion.hoverFade; easing.type: Easing.OutCubic }
     }
@@ -58,6 +64,13 @@ Item {
         to: 0
         duration: Motion.holdReleaseMs
         easing.type: Easing.OutCubic
+    }
+
+    // Start filling the ring (the pointer pressing, or a key held down)
+    function startHold() {
+        if (!root.ready || !root.hold) return
+        drain.stop()
+        fill.restart()
     }
 
     function cancelHold() {
@@ -169,15 +182,14 @@ Item {
         enabled: root.ready
         hoverEnabled: true
         cursorShape: root.ready ? Qt.PointingHandCursor : Qt.ArrowCursor
-        onPressed: {
-            if (!root.hold) return
-            drain.stop()
-            fill.restart()
-        }
+        onPressed: root.startHold()
         onReleased: root.cancelHold()
         onCanceled: root.cancelHold()
-        // Sliding off the button while held cancels too
-        onContainsMouseChanged: if (!containsMouse) root.cancelHold()
+        onContainsMouseChanged: {
+            if (containsMouse) root.hovered()
+            // Sliding off the button while held cancels too
+            else root.cancelHold()
+        }
         onClicked: if (!root.hold) root.activated()
     }
 }
