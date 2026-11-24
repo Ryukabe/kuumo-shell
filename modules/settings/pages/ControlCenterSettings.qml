@@ -169,7 +169,7 @@ SettingsPage {
         }
     }
 
-    SettingsCard {
+        SettingsCard {
         title: "KDE Connect"
 
         SettingsRow {
@@ -188,13 +188,26 @@ SettingsPage {
         SettingsRow {
             settingId: "control-kdeconnect-low"
             title: "Low battery level"
-            description: "The battery ring turns red when the phone is at or below this and not charging."
+            description: "The battery ring turns red, and the warning shows, when the phone is at or below this and not charging."
             keywords: "phone battery red warning"
 
             SettingsSlider {
                 settingKey: "kdeConnectLowBattery"
                 iconName: "battery_alert"
-                from: 5; to: 50; stepSize: 5; unit: "%"
+                from: 5; to: 100; stepSize: 5; unit: "%"
+            }
+        }
+
+        SettingsRow {
+            settingId: "control-kdeconnect-warning"
+            configKey: "kdeConnectLowWarning"
+            title: "Warn when the phone battery is low"
+            description: "Shows a notification on the island when the phone drops to the low battery level. The phone is checked once a minute, also while the control center is closed."
+            keywords: "phone battery notification alert toast"
+
+            MoonToggle {
+                checked: Root.Config.kdeConnectLowWarning
+                onToggled: value => SettingsState.set("kdeConnectLowWarning", value)
             }
         }
 
@@ -202,12 +215,25 @@ SettingsPage {
             settingId: "control-kdeconnect-waves"
             configKey: "kdeConnectWaves"
             title: "Signal waves"
-            description: "Rings ripple out of the phone icon when you ping the phone, find it or send the clipboard."
+            description: "Rings ripple out of the phone icon when you ping the phone, find it, send the clipboard or send files."
             keywords: "phone ping animation ripple"
 
             MoonToggle {
                 checked: Root.Config.kdeConnectWaves
                 onToggled: value => SettingsState.set("kdeConnectWaves", value)
+            }
+        }
+
+        SettingsRow {
+            settingId: "control-kdeconnect-drop"
+            configKey: "kdeConnectDrop"
+            title: "Send dropped files"
+            description: "Drop files on the KDE Connect page to send them to the phone."
+            keywords: "drag drop share file phone send"
+
+            MoonToggle {
+                checked: Root.Config.kdeConnectDrop
+                onToggled: value => SettingsState.set("kdeConnectDrop", value)
             }
         }
     }

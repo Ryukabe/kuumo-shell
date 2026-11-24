@@ -57,6 +57,9 @@ Singleton {
     property bool kdeConnectBatteryRing: true
     property int kdeConnectLowBattery: 20
     property bool kdeConnectWaves: true
+    property bool kdeConnectLowWarning: true
+    property bool kdeConnectDrop: true
+    property string kdeConnectDevice: ""
 
     // Night Light (hyprsunset): the range of its sliders and where it starts
     property int nightLightMinK: 2500         // warmest, in Kelvin
@@ -128,7 +131,17 @@ Singleton {
     property bool launcherSuggestions: true
     // Launcher: how many result rows show before the list scrolls
     property int launcherMaxRows: 6
-
+    property bool launcherSourceApps: true
+    property bool launcherSourceCommands: true
+    property bool launcherSourceSettings: true
+    property bool launcherSourceFiles: true
+    property bool launcherSourceWeb: true
+    property bool launcherHeaders: true
+    property int launcherGroupMax: 5
+    property bool launcherFilesHidden: false
+    property string launcherFilesWhere: "home"
+    property string launcherWebEngine: "duckduckgo"
+    
     // Animations (Settings, Animations): 1 is the normal speed, above 1 is faster
     property real animationSpeed: 1.0
     // How much the island overshoots when it opens and closes: 0 is none, 1 is a lot.

@@ -43,13 +43,16 @@ Item {
     readonly property bool toastVisible: NotificationService.toastActive
         && IslandState.mode === "idle" && !IslandState.osdActive
 
-    // How tall the launcher's list is: one row per result (up to maxRows), or in the emoji
-    // picker the rows of emoji (up to emojiRows) plus the caption line
+    // How tall the launcher's list is: the rows' heights added up (a result row is rowH, a
+    // section header headerH) up to maxRows rows' worth, or in the emoji picker the rows of
+    // emoji (up to emojiRows) plus the caption line
     readonly property int launcherListH: {
         const L = layouts.launcher
         if (LauncherService.gridView)
             return Math.min(Math.ceil(LauncherService.results.length / L.emojiCols), L.emojiRows) * L.emojiCell + L.emojiCaptionH
-        return Math.min(LauncherService.results.length, L.maxRows) * L.rowH
+        let total = 0
+        for (const row of LauncherService.results) total += row.kind === "header" ? L.headerH : L.rowH
+        return Math.min(total, L.maxRows * L.rowH)
     }
 
     // The launcher is as tall as its search field plus its list

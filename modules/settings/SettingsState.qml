@@ -29,8 +29,12 @@ Singleton {
         "wallpaperTransitionFps", "switcherPreviewDelayMs",
         "animationSpeed", "islandBounce", "reduceMotion", "clockRoll", "osdBounce", "switcherBounce", "scrollStep", "scrollBounce",
         "launcherCalculator", "launcherSuggestions", "launcherMaxRows", "launcherBackspaceLeavesCommands",
+        "launcherSourceApps", "launcherSourceCommands", "launcherSourceSettings", "launcherSourceFiles",
+        "launcherSourceWeb", "launcherHeaders", "launcherGroupMax", "launcherFilesHidden",
+        "launcherFilesWhere", "launcherWebEngine",
         "sliderStep", "sliderLargeStep",
         "kdeConnectBatteryRing", "kdeConnectLowBattery", "kdeConnectWaves",
+        "kdeConnectLowWarning", "kdeConnectDrop", "kdeConnectDevice",
         "nightLightMinK", "nightLightMaxK", "nightLightDefaultK", "nightLightStepK",
         "nightLightMinGamma", "nightLightMaxGamma"
     ]

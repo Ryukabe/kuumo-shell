@@ -51,7 +51,8 @@ Singleton {
             // the left and the percentage, status and connection on the right, then a row of
             // round buttons and a card that opens the KDE Connect app
             phoneIconSize: 80, phoneCardH: 108, phoneCardPad: 14, phoneCardRadius: 16, phonePctSize: 28,
-            signalBarW: 3, signalBarGap: 2, signalBarH: 12
+            signalBarW: 3, signalBarGap: 2, signalBarH: 12,
+            phoneChipH: 22, phoneChipPad: 8, dropH: 32
         },
         // Search field on top, one row per matching app below. The height is not here:
         // it grows with the number of results (see launcherLayout in Island.qml).
@@ -61,6 +62,8 @@ Singleton {
             searchH: 32, fontSize: 15, listGap: 8,
             // Result rows: at most maxRows show (a setting), then the list scrolls
             maxRows: Root.Config.launcherMaxRows, rowH: 40, rowPad: 12, iconSize: 24, iconGap: 12,
+            // The small section titles ("Apps", "Files", ...) between the groups of results
+            headerH: 28,
             // The emoji picker: a grid of emojiCols columns and at most emojiRows rows of
             // square cells, and a line under it with the name of the emoji you are on
             emojiCols: 9, emojiRows: 4, emojiCell: 44, emojiSize: 26, emojiCaptionH: 28

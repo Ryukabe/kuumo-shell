@@ -2,16 +2,17 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import "../.." as Root
 import "../../components"
 import "../../styles"
 import "../../state"
-import "../.." as Root
 
 // The launcher island: a search field on top, the matching rows as a list below. A row
 // is an app, a calculator / conversion answer, a suggestion for finishing a conversion,
-// a setting (in the settings command), or (in command mode) a command. Enter on a command
-// opens its view. The emoji picker shows its emoji as a grid instead of a list, with the
-// name of the emoji you are on under it.
+// a setting, a file, a web search, or (in command mode) a command; small headers sit between
+// the groups of results. Enter on a row starts it (Ctrl+Enter shows a file in its folder).
+// The emoji picker shows its emoji as a grid instead of a list, with the name of the emoji
+// you are on under it.
 Item {
     id: root
 
@@ -25,6 +26,29 @@ Item {
     // Where the list or grid starts, and how many rows of emoji the grid shows right now
     readonly property real listTop: layout.padTop + layout.searchH + layout.listGap
     readonly property int gridRowsShown: Math.min(Math.ceil(grid.count / layout.emojiCols), layout.emojiRows)
+
+    // Which row the highlight is on, kept by what the row is so it stays on it while more
+    // results arrive (files come in a moment after you stop typing). A new search starts at the top.
+    property string currentKey: ""
+    property bool resetOnModel: false
+
+    function rowKey(row) {
+        return row ? row.kind + "|" + row.name + "|" + (row.path ?? "") : ""
+    }
+
+    // The first row the highlight can stop on (a header is skipped)
+    function firstSelectable() {
+        const at = LauncherService.results.findIndex(r => r.kind !== "header")
+        return at < 0 ? 0 : at
+    }
+
+    // Put the highlight on a row of the list
+    function select(index) {
+        list.currentIndex = index
+        root.currentKey = root.rowKey(LauncherService.results[index])
+        if (index === root.firstSelectable()) list.positionViewAtBeginning()
+        else list.positionViewAtIndex(index, ListView.Contain)
+    }
 
     // Take the keyboard as soon as the content shows
     onVisibleChanged: if (visible) input.forceActiveFocus()
@@ -53,36 +77,49 @@ Item {
         }
     }
 
-    // Start the highlighted row
-    function launchCurrent() {
+    // Start the highlighted row (reveal: Ctrl was held)
+    function launchCurrent(reveal) {
         const index = LauncherService.gridView ? grid.currentIndex : list.currentIndex
         const row = LauncherService.results[index]
-        if (row) LauncherService.activate(row)
+        if (row) LauncherService.activate(row, reveal)
     }
 
-    // Move the highlight: up and down in a list; in the emoji grid also left and right
+    // Move the highlight: up and down in a list (headers are skipped); in the emoji grid
+    // also left and right
     function move(dx, dy) {
         if (LauncherService.gridView) {
             const last = grid.count - 1
             if (last < 0) return
             const step = dx + dy * root.layout.emojiCols
             grid.currentIndex = Math.max(0, Math.min(last, grid.currentIndex + step))
-        } else if (dy > 0) {
-            list.incrementCurrentIndex()
-        } else if (dy < 0) {
-            list.decrementCurrentIndex()
+            return
         }
+        if (dy === 0) return
+        const rows = LauncherService.results
+        let at = list.currentIndex
+        while (true) {
+            at += dy
+            if (at < 0 || at >= rows.length) return
+            if (rows[at].kind !== "header") break
+        }
+        root.select(at)
+    }
+
+    // Is the highlighted row a setting that left and right can change?
+    function nudgeable() {
+        const row = LauncherService.results[list.currentIndex]
+        return !!row && row.kind === "setting" && !!row.setting.control && row.setting.control.kind !== "color"
     }
 
     // Left or right on a setting row changes it (big takes five steps)
     function nudge(direction, big) {
         const row = LauncherService.results[list.currentIndex]
-        if (row && row.kind === "setting") LauncherService.nudgeSetting(row.setting, direction, big)
+        if (row && row.kind === "setting" && row.setting.control) LauncherService.nudgeSetting(row.setting, direction, big)
     }
 
-    // The icon at the start of the search field: a magnifier for apps, a terminal in command
-    // mode, and the icon of the open command (the emoji face, ...). It lines up with the
-    // icons of the rows below.
+    // The icon at the start of the search field: a magnifier for the search, a terminal in
+    // command mode, and the icon of the open command (the emoji face, ...). It lines up with
+    // the icons of the rows below.
     Text {
         id: fieldIcon
         x: root.layout.padX + root.layout.rowPad
@@ -128,43 +165,45 @@ Item {
                 cursorPosition = text.length
                 return
             }
+            // A new search starts at the top of the list
+            root.resetOnModel = true
             LauncherService.query = text
         }
 
         Keys.onUpPressed: root.move(0, -1)
         Keys.onDownPressed: root.move(0, 1)
         // Left and right move the highlight in the emoji grid, change the highlighted
-        // setting in the settings view, and move the cursor otherwise
+        // setting when it is one you can change here, and move the cursor otherwise
         Keys.onLeftPressed: event => {
             if (LauncherService.gridView) root.move(-1, 0)
-            else if (LauncherService.settingsView) root.nudge(-1, !!(event.modifiers & Qt.ShiftModifier))
+            else if (root.nudgeable()) root.nudge(-1, !!(event.modifiers & Qt.ShiftModifier))
             else event.accepted = false
         }
         Keys.onRightPressed: event => {
             if (LauncherService.gridView) root.move(1, 0)
-            else if (LauncherService.settingsView) root.nudge(1, !!(event.modifiers & Qt.ShiftModifier))
+            else if (root.nudgeable()) root.nudge(1, !!(event.modifiers & Qt.ShiftModifier))
             else event.accepted = false
         }
-        Keys.onReturnPressed: root.launchCurrent()
-        Keys.onEnterPressed: root.launchCurrent()
+        Keys.onReturnPressed: event => root.launchCurrent(!!(event.modifiers & Qt.ControlModifier))
+        Keys.onEnterPressed: event => root.launchCurrent(!!(event.modifiers & Qt.ControlModifier))
 
         // ESC goes back out of an open command, and closes the island otherwise
         Keys.onEscapePressed: LauncherService.activeCommand
             ? LauncherService.closeCommand()
             : IslandState.closeAll()
 
-     // Backspace in an empty field steps back: out of an open command to the command
-     // list, and (when that is on in Settings) out of the command list to the apps
-     Keys.onPressed: event => {
-         if (event.key !== Qt.Key_Backspace || input.text !== "") return
-         if (LauncherService.activeCommand) {
-             LauncherService.closeCommand()
-             event.accepted = true
-         } else if (LauncherService.commandMode && Root.Config.launcherBackspaceLeavesCommands) {
-             LauncherService.leaveCommands()
-             event.accepted = true
-         }
-     }
+        // Backspace in an empty field steps back: out of an open command to the command
+        // list, and (when that is on in Settings) out of the command list to the apps
+        Keys.onPressed: event => {
+            if (event.key !== Qt.Key_Backspace || input.text !== "") return
+            if (LauncherService.activeCommand) {
+                LauncherService.closeCommand()
+                event.accepted = true
+            } else if (LauncherService.commandMode && Root.Config.launcherBackspaceLeavesCommands) {
+                LauncherService.leaveCommands()
+                event.accepted = true
+            }
+        }
     }
 
     // Hint shown while the field is empty: it types itself out when the island opens and
@@ -181,7 +220,7 @@ Item {
         font.pixelSize: root.layout.fontSize
     }
 
-    // ── The list: one row each, scrolls after maxRows ──
+    // ── The list: one row each, a header between the groups, scrolls after maxRows ──
     ListView {
         id: list
         visible: !LauncherService.gridView
@@ -194,33 +233,57 @@ Item {
         model: LauncherService.gridView ? [] : LauncherService.results
         currentIndex: 0
 
-        // A new search starts at the top
-        onModelChanged: currentIndex = 0
+        // A new search starts at the top; when more results arrive for the same search, the
+        // highlight stays on its row
+        onModelChanged: {
+            const rows = LauncherService.results
+            const at = root.resetOnModel ? -1 : rows.findIndex(r => root.rowKey(r) === root.currentKey)
+            root.resetOnModel = false
+            root.select(at >= 0 ? at : root.firstSelectable())
+        }
 
         delegate: Item {
             id: row
             required property var modelData
             required property int index
 
+            readonly property bool isHeader: modelData.kind === "header"
             // An app has its own icon; every other row has an icon-font symbol
             readonly property bool isApp: modelData.kind === "app"
             readonly property bool isSetting: modelData.kind === "setting"
-            readonly property bool current: index === list.currentIndex
+            // A setting you can change here shows its value on the right
+            readonly property bool hasValue: isSetting && !!modelData.setting.control
+                && modelData.setting.control.kind !== "color"
+            readonly property bool current: !isHeader && index === list.currentIndex
 
             // The value of a setting row, read live so it follows every change. The
             // highlighted row shows arrows for a number or a choice, which left and right change.
             readonly property string valueText: {
-                if (!row.isSetting) return ""
+                if (!row.hasValue) return ""
                 const value = LauncherService.settingValue(row.modelData.setting)
                 const kind = row.modelData.setting.control.kind
                 return row.current && kind !== "toggle" ? "‹  " + value + "  ›" : value
             }
 
             width: list.width
-            height: root.layout.rowH
+            height: isHeader ? root.layout.headerH : root.layout.rowH
+
+            // The title of a group of results
+            Text {
+                visible: row.isHeader
+                x: root.layout.rowPad
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: Theme.spacingSm / 2
+                text: row.isHeader ? row.modelData.name : ""
+                color: Theme.fgMuted
+                font.family: Theme.fontText
+                font.pixelSize: Theme.fontSizeXs
+                font.weight: Font.Medium
+            }
 
             // Highlight behind the selected row
             Rectangle {
+                visible: !row.isHeader
                 anchors.fill: parent
                 radius: Theme.radiusSmall
                 color: Theme.subBg
@@ -235,6 +298,7 @@ Item {
             // clip: a symbol name the icon font does not know shows as text, and must not spill out
             Item {
                 id: iconSlot
+                visible: !row.isHeader
                 x: root.layout.rowPad
                 anchors.verticalCenter: parent.verticalCenter
                 width: root.layout.iconSize
@@ -250,10 +314,10 @@ Item {
 
                 Text {
                     anchors.fill: parent
-                    visible: !row.isApp
+                    visible: !row.isApp && !row.isHeader
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    text: row.isApp ? "" : row.modelData.symbol
+                    text: row.isApp || row.isHeader ? "" : row.modelData.symbol
                     color: row.current ? Theme.fg : Theme.fgMuted
                     Behavior on color { ColorAnimation { duration: Motion.hoverFade } }
                     font.family: Theme.fontIcon
@@ -268,7 +332,7 @@ Item {
                 anchors.rightMargin: root.layout.rowPad
                 anchors.verticalCenter: parent.verticalCenter
                 width: Math.min(implicitWidth, parent.width * 0.4)
-                visible: row.isSetting
+                visible: row.hasValue
                 horizontalAlignment: Text.AlignRight
                 elide: Text.ElideRight
                 text: row.valueText
@@ -279,17 +343,18 @@ Item {
             }
 
             // Name (or the answer), and under it the small line of an answer, suggestion,
-            // command, setting or note
+            // command, setting, file or note
             Column {
+                visible: !row.isHeader
                 anchors.left: iconSlot.right
                 anchors.leftMargin: root.layout.iconGap
-                anchors.right: row.isSetting ? valueLabel.left : parent.right
-                anchors.rightMargin: row.isSetting ? root.layout.iconGap : root.layout.rowPad
+                anchors.right: row.hasValue ? valueLabel.left : parent.right
+                anchors.rightMargin: row.hasValue ? root.layout.iconGap : root.layout.rowPad
                 anchors.verticalCenter: parent.verticalCenter
 
                 Text {
                     width: parent.width
-                    text: row.modelData.name
+                    text: row.isHeader ? "" : row.modelData.name
                     color: Theme.fg
                     font.family: Theme.fontText
                     font.pixelSize: root.layout.fontSize
@@ -299,7 +364,7 @@ Item {
                 Text {
                     width: parent.width
                     visible: text !== ""
-                    text: row.modelData.sub
+                    text: row.isHeader ? "" : row.modelData.sub
                     color: Theme.fgMuted
                     font.family: Theme.fontText
                     font.pixelSize: Theme.fontSizeXs
@@ -309,9 +374,10 @@ Item {
 
             MouseArea {
                 anchors.fill: parent
+                enabled: !row.isHeader
                 hoverEnabled: true
-                onEntered: list.currentIndex = row.index
-                onClicked: LauncherService.activate(row.modelData)
+                onEntered: root.select(row.index)
+                onClicked: LauncherService.activate(row.modelData, false)
             }
         }
     }
@@ -364,7 +430,7 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 onEntered: grid.currentIndex = cell.index
-                onClicked: LauncherService.activate(cell.modelData)
+                onClicked: LauncherService.activate(cell.modelData, false)
             }
         }
     }

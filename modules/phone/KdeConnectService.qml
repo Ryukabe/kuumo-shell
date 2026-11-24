@@ -2,22 +2,34 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "../.." as Root
+import "../settings"
 import "../../state"
 
-// KDE Connect: the paired phone's status (reachable, battery, network) and its actions (ring,
-// ping, send the clipboard, look for it again, open the KDE Connect app).
-// The phone is found with kdeconnect-cli; whether it is reachable, its battery and its
-// network are read from KDE Connect's D-Bus interface with busctl. It re-reads every few
-// seconds while the control center is open. With several phones paired, the first one is used.
+// KDE Connect: the paired phones and the one in use (reachable, battery, network), and what
+// can be done with it (ring, ping, send the clipboard, send files, look again, open the app).
+// The phones are found with kdeconnect-cli; whether the phone is reachable, its battery and
+// its network are read from KDE Connect's D-Bus interface with busctl. It re-reads every few
+// seconds while the control center is open, and once a minute otherwise when the low battery
+// warning is on. With several phones paired, the one chosen on the KDE Connect page is used
+// (the first one until you choose).
 Singleton {
     id: root
 
     // ── Tuning ──
-    readonly property int pollMs: 15000    // how often the phone is re-read while the panel is open
-    readonly property int noticeMs: 2500   // how long the line under the page's buttons stays
-    readonly property int litMs: 700       // how long a button of the page stays lit after it ran
+    readonly property int pollMs: 15000       // how often the phone is re-read while the panel is open
+    readonly property int warnPollMs: 60000   // how often it is read while the panel is closed (warning on)
+    readonly property int lowResetMargin: 5   // the battery must climb this far above the low level to warn again
+    readonly property int noticeMs: 2500      // how long the line on the page stays
+    readonly property int litMs: 700          // how long a button of the page stays lit after it ran
 
-    // ── The phone ──
+    // ── The phones ──
+    // The paired phones: [{ id, name }]
+    property var devices: []
+    // Everything kdeconnect-cli lists (paired or not), while it is sorted out which are paired
+    property var listed: []
+
+    // ── The phone in use ──
     property string deviceId: ""
     property string deviceName: ""
     property bool reachable: false     // connected right now
@@ -27,7 +39,7 @@ Singleton {
     property int signalBars: -1        // 0..4; -1 while unknown
 
     // ── Feedback for the page ──
-    // The action that ran a moment ago ("ring", "ping", "clipboard", "refresh"), or ""
+    // The action that ran a moment ago ("ring", "ping", "clipboard", "files", "refresh"), or ""
     property string lastAction: ""
     // A short line about what just happened, or ""
     property string notice: ""
@@ -45,14 +57,29 @@ Singleton {
         return battery >= 0 ? battery + "%" : "Connected"
     }
 
-    // The phone is only re-read while the control center is open
+    // Files waiting to be sent, and how many were asked for in this round
+    property var fileQueue: []
+    property int sendTotal: 0
+    // True once the low battery warning has been shown, until the battery recovers
+    property bool lowWarned: false
+
+    // The phone is re-read often while the control center is open
     readonly property bool watching: IslandState.control
     onWatchingChanged: if (watching) refresh()
 
-    // ── Actions ──
-    // Looks for the phone again, then reads its status
+    // ── Reading ──
+    // Looks for the phones again, then reads the status of the one in use
     function refresh() {
         if (!listProc.running) listProc.running = true
+    }
+
+    // Reads only the status of the phone in use (cheaper than refresh)
+    function poll() {
+        if (!paired) {
+            refresh()
+            return
+        }
+        if (!reachableProc.running) reachableProc.running = true
     }
 
     // Asks KDE Connect to search the network again (the Refresh button), then reads the status
@@ -61,6 +88,48 @@ Singleton {
         announce("refresh", "Looking for " + (deviceName !== "" ? deviceName : "your phone") + "…", false)
     }
 
+    // ── Choosing the phone ──
+    function selectDevice(id) {
+        SettingsState.set("kdeConnectDevice", id)
+        applyDevice()
+    }
+
+    // The next paired phone, after the one in use (wraps around)
+    function nextDevice() {
+        if (devices.length < 2) return
+        const at = devices.findIndex(d => d.id === deviceId)
+        selectDevice(devices[(at + 1) % devices.length].id)
+    }
+
+    // Uses the phone chosen in Settings if it is still paired, else the first one
+    function applyDevice() {
+        const wanted = Root.Config.kdeConnectDevice
+        const pick = devices.find(d => d.id === wanted) ?? devices[0] ?? null
+        if (!pick) {
+            deviceId = ""
+            deviceName = ""
+            clearStatus()
+            return
+        }
+        const changed = pick.id !== deviceId
+        deviceId = pick.id
+        deviceName = pick.name
+        if (changed) {
+            clearStatus()
+            lowWarned = false
+        }
+        if (!reachableProc.running) reachableProc.running = true
+    }
+
+    function clearStatus() {
+        reachable = false
+        battery = -1
+        charging = false
+        networkType = ""
+        signalBars = -1
+    }
+
+    // ── Actions ──
     // Makes the phone ring, so you can find it
     function ring() { runAction("--ring", "ring", "Ringing " + deviceName) }
 
@@ -90,14 +159,55 @@ Singleton {
         announce("clipboard", "Sent the clipboard to " + deviceName, true)
     }
 
+    // The local file paths among dropped urls (a web address is not sent)
+    function localPaths(urls) {
+        const paths = []
+        for (const url of urls) {
+            const text = String(url)
+            if (!text.startsWith("file://")) continue
+            try {
+                paths.push(decodeURIComponent(text.slice(7)))
+            } catch (error) {
+                paths.push(text.slice(7))
+            }
+        }
+        return paths
+    }
+
+    // Sends dropped files to the phone, one after the other
+    function sendFiles(urls) {
+        if (!reachable) return
+        const paths = localPaths(urls)
+        if (paths.length === 0) return
+        sendTotal += paths.length
+        fileQueue = fileQueue.concat(paths)
+        announce("files", "Sending " + (sendTotal === 1 ? "1 file" : sendTotal + " files") + "…", true)
+        if (!fileProc.running) nextFile()
+    }
+
+    // Starts the next waiting file, and says so when all are sent
+    function nextFile() {
+        if (fileQueue.length === 0) {
+            if (sendTotal > 0) {
+                announce("files", "Sent " + (sendTotal === 1 ? "1 file" : sendTotal + " files") + " to " + deviceName, false)
+                sendTotal = 0
+            }
+            return
+        }
+        const path = fileQueue[0]
+        fileQueue = fileQueue.slice(1)
+        fileProc.command = ["kdeconnect-cli", "--device", deviceId, "--share", path]
+        fileProc.running = true
+    }
+
     // Opens the KDE Connect app (files, messages, ...) and closes the island
     function openApp() {
         Quickshell.execDetached(["kdeconnect-app"])
         IslandState.closeAll()
     }
 
-    // Lights the button of the action for a moment, shows the line under the buttons, and
-    // (when wave is true) makes the phone icons ripple
+    // Lights the button of the action for a moment, shows the line on the page, and (when
+    // wave is true) makes the phone icons ripple
     function announce(action, message, wave) {
         lastAction = action
         notice = message
@@ -106,25 +216,49 @@ Singleton {
         if (wave) pulsed()
     }
 
-    // ── Reading the results ──
-    // `kdeconnect-cli -l --id-name-only` prints one phone per line: its id, a space, its name
-    function parseDevices(text) {
-        const line = text.trim().split("\n")[0]
-        const at = line.indexOf(" ")
-        if (at < 0) {
-            // No phone paired
-            deviceId = ""
-            deviceName = ""
-            reachable = false
-            battery = -1
-            charging = false
-            networkType = ""
-            signalBars = -1
-            return
+    // ── Low battery ──
+    // Shows a notification (it appears as a toast on the island) once when the battery drops
+    // to the level chosen in Settings, and again only after it has recovered or was charged
+    function checkLow() {
+        const level = Root.Config.kdeConnectLowBattery
+        const low = reachable && !charging && battery >= 0 && battery <= level
+        if (low) {
+            if (lowWarned || !Root.Config.kdeConnectLowWarning) return
+            lowWarned = true
+            Quickshell.execDetached([
+                "notify-send", "--app-name=KDE Connect", "--icon=phone",
+                "Phone battery low", deviceName + " is at " + battery + "%"
+            ])
+        } else if (charging || battery > level + lowResetMargin) {
+            lowWarned = false
         }
-        deviceId = line.slice(0, at)
-        deviceName = line.slice(at + 1)
-        if (!reachableProc.running) reachableProc.running = true
+    }
+
+    // ── Reading the results ──
+    // `kdeconnect-cli -l --id-name-only` prints one phone per line: its id, a space, its name.
+    // It lists phones that are not paired too, so the paired ones are asked for next.
+    function parseDevices(text) {
+        const found = []
+        for (const line of text.trim().split("\n")) {
+            const at = line.indexOf(" ")
+            if (at > 0) found.push({ id: line.slice(0, at), name: line.slice(at + 1) })
+        }
+        listed = found
+        if (!pairedProc.running) pairedProc.running = true
+    }
+
+    // busctl prints the paired ids as: as 2 "id1" "id2". If that could not be read, every
+    // listed phone counts.
+    function parsePaired(text) {
+        const ids = []
+        const quoted = /"([^"]+)"/g
+        let match = quoted.exec(text)
+        while (match !== null) {
+            ids.push(match[1])
+            match = quoted.exec(text)
+        }
+        devices = ids.length > 0 ? listed.filter(d => ids.includes(d.id)) : listed
+        applyDevice()
     }
 
     // busctl prints a boolean as "b true" or "b false"
@@ -146,6 +280,7 @@ Singleton {
         const percent = parseInt((lines[0] ?? "").split(" ")[1])
         battery = isNaN(percent) ? -1 : percent
         charging = (lines[1] ?? "") === "b true"
+        checkLow()
         if (!networkProc.running) networkProc.running = true
     }
 
@@ -164,6 +299,15 @@ Singleton {
         id: listProc
         command: ["kdeconnect-cli", "--list-devices", "--id-name-only"]
         stdout: StdioCollector { onStreamFinished: root.parseDevices(text) }
+    }
+
+    Process {
+        id: pairedProc
+        command: [
+            "busctl", "--user", "call", "org.kde.kdeconnect", "/modules/kdeconnect",
+            "org.kde.kdeconnect.daemon", "devices", "bb", "false", "true"
+        ]
+        stdout: StdioCollector { onStreamFinished: root.parsePaired(text) }
     }
 
     Process {
@@ -207,6 +351,12 @@ Singleton {
         stdout: StdioCollector { onStreamFinished: root.shareClipboard(text) }
     }
 
+    // Sends one file; when it is done, the next waiting file starts
+    Process {
+        id: fileProc
+        onRunningChanged: if (!running) root.nextFile()
+    }
+
     // Asks KDE Connect to look for devices again; when it is done, the status is read
     Process {
         id: rescanProc
@@ -232,6 +382,14 @@ Singleton {
         repeat: true
         running: root.watching && root.paired
         onTriggered: root.refresh()
+    }
+
+    // While the panel is closed, read the phone once in a while so a low battery is noticed
+    Timer {
+        interval: root.warnPollMs
+        repeat: true
+        running: Root.Config.kdeConnectLowWarning && root.paired && !root.watching
+        onTriggered: root.poll()
     }
 
     Component.onCompleted: refresh()
