@@ -21,9 +21,11 @@ QtObject {
     readonly property color accent: Root.Config.customAccent
 
     readonly property color red: Root.Config.customRed
+    readonly property color orange: Root.Config.customOrange
     readonly property color green: Root.Config.customGreen
     readonly property color yellow: Root.Config.customYellow
     readonly property color blue: Root.Config.customBlue
     readonly property color purple: Root.Config.customPurple
+    readonly property color pink: Root.Config.customPink
     readonly property color cyan: Root.Config.customCyan
 }

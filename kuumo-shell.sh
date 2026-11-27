@@ -2,7 +2,8 @@
 # kuumo: start / stop / restart kuumo-shell
 set -u
 
-DIR="${KUUMO_DIR:-$HOME/kuumo-shell}"
+# The shell lives next to this script, unless KUUMO_DIR says otherwise
+DIR="${KUUMO_DIR:-$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)}"
 LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/kuumo-shell"
 LOG="$LOG_DIR/kuumo.log"
 

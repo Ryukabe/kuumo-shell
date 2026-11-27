@@ -17,9 +17,11 @@ QtObject {
     readonly property color accent: "#7aa2f7"
 
     readonly property color red: "#f7768e"
+    readonly property color orange: "#ff9e64"      // Tokyo Night orange
     readonly property color green: "#9ece6a"
     readonly property color yellow: "#e0af68"
     readonly property color blue: "#7aa2f7"
     readonly property color purple: "#bb9af7"
+    readonly property color pink: "#f395c4"        // Softer than Tokyo Night's #ff007c, which clashes with the red
     readonly property color cyan: "#7dcfff"
 }

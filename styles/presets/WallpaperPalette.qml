@@ -4,7 +4,7 @@ import "../.." as Root
 
 // A theme made from the wallpaper on screen. The picture is cut down to a handful of colors; the
 // most vivid mid-tone one becomes the accent, and the dark surfaces are tinted with its hue. The
-// six status colors stay fixed. It has the same shape as a preset, but it is not in presetIds,
+// eight status colors stay fixed. It has the same shape as a preset, but it is not in presetIds,
 // so the theme switcher does not list it.
 QtObject {
     id: root
@@ -67,9 +67,11 @@ QtObject {
     readonly property color accent: root.palette.accent
 
     readonly property color red: "#e06c75"
+    readonly property color orange: "#e49567"
     readonly property color green: "#98c379"
     readonly property color yellow: "#e5c07b"
     readonly property color blue: "#61afef"
     readonly property color purple: "#c678dd"
+    readonly property color pink: "#e387b1"
     readonly property color cyan: "#56b6c2"
 }

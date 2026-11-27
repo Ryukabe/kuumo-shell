@@ -100,14 +100,16 @@ Singleton {
     property string customSubBg: "#131417"
     property string customElevatedBg: "#1b1d22"
     property string customBorder: "#272a30"
-    property string customFgMuted: "#7e8490"
+    property string customFgMuted: "#8a909c"
     property string customFg: "#f4f6f9"
-    property string customAccent: "#ffffff"
+    property string customAccent: "#e0ddd8"
     property string customRed: "#e06c75"
+    property string customOrange: "#e49567"
     property string customGreen: "#98c379"
     property string customYellow: "#e5c07b"
     property string customBlue: "#61afef"
     property string customPurple: "#c678dd"
+    property string customPink: "#e387b1"
     property string customCyan: "#56b6c2"
 
     // The clipboard island closes this long after a copy (ms), so "Copied" can be seen
@@ -141,7 +143,7 @@ Singleton {
     property bool launcherFilesHidden: false
     property string launcherFilesWhere: "home"
     property string launcherWebEngine: "duckduckgo"
-    
+
     // Animations (Settings, Animations): 1 is the normal speed, above 1 is faster
     property real animationSpeed: 1.0
     // How much the island overshoots when it opens and closes: 0 is none, 1 is a lot.

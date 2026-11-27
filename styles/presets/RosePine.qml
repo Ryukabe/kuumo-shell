@@ -17,9 +17,11 @@ QtObject {
     readonly property color accent: "#c4a7e7"
 
     readonly property color red: "#eb6f92"
+    readonly property color orange: "#eda682"      // Not in the Rose Pine palette, matched to it
     readonly property color green: "#31748f"
     readonly property color yellow: "#f6c177"
     readonly property color blue: "#9ccfd8"
     readonly property color purple: "#c4a7e7"
+    readonly property color pink: "#e3a0c2"        // Not in the Rose Pine palette, matched to it
     readonly property color cyan: "#ebbcba"
 }

@@ -17,9 +17,11 @@ QtObject {
     readonly property color accent: "#56c3f9"
 
     readonly property color red: "#F07178"
+    readonly property color orange: "#ff8f40"      // Ayu keyword orange
     readonly property color green: "#AAD84C"
     readonly property color yellow: "#E7C547"
     readonly property color blue: "#36A3D9"
     readonly property color purple: "#c79bf4"
+    readonly property color pink: "#f27daa"        // Not in the Ayu palette, matched to it
     readonly property color cyan: "#95E6CB"
 }

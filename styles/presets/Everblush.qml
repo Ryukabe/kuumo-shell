@@ -16,9 +16,11 @@ QtObject {
     readonly property color accent: "#6cbfbf"      // Cyan, chosen
 
     readonly property color red: "#e57474"
+    readonly property color orange: "#e39d6d"      // Not in the Everblush palette, matched to it
     readonly property color green: "#8ccf7e"
     readonly property color yellow: "#e5c76b"
     readonly property color blue: "#67b0e8"
     readonly property color purple: "#c47fd5"      // Magenta
+    readonly property color pink: "#dd88ab"        // Not in the Everblush palette, matched to it
     readonly property color cyan: "#6cbfbf"
 }

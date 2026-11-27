@@ -55,11 +55,14 @@ Singleton {
     readonly property color fg: active.fg
     readonly property color accent: active.accent
     readonly property color red: active.red
-    readonly property color green: active.green
+    // A preset that does not define orange or pink yet falls back to its nearest color
+    readonly property color orange: active.orange ?? active.yellow
     readonly property color yellow: active.yellow
+    readonly property color green: active.green
+    readonly property color cyan: active.cyan
     readonly property color blue: active.blue
     readonly property color purple: active.purple
-    readonly property color cyan: active.cyan
+    readonly property color pink: active.pink ?? active.purple
 
     // ── Opacities ──
     // Content shown but inactive (e.g. the player with nothing playing)
@@ -80,9 +83,10 @@ Singleton {
     readonly property real haloOsdBoost: 0.35    // extra halo strength at full level during an OSD
 
     // ── Fonts ──
-    readonly property string fontDisplay: "SF Pro Display"
-    readonly property string fontText: "SF Pro Text"
-    readonly property string fontMono: "SF Pro Mono"
+    // Installed by install.sh: inter-font, ttf-jetbrains-mono-nerd
+    readonly property string fontDisplay: "Inter"
+    readonly property string fontText: "Inter"
+    readonly property string fontMono: "JetBrainsMono Nerd Font"
     // Icons are Material Symbols ligatures ("volume_up"); also installed: Outlined, Sharp
     readonly property string fontIcon: "Material Symbols Rounded"
 
